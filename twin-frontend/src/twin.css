@@ -819,6 +819,103 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 @media (max-width: 860px) { .health-main-grid  { grid-template-columns: 1fr; } }
 @media (max-width: 700px) { .teaser-split      { grid-template-columns: 1fr; } .hero-title { font-size: 48px; } }
 
+/* ══════════════════════════════════════════════════════════════ */
+/*  RESPONSIVE — tablet ≤ 1024px                                 */
+/* ══════════════════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .landing-hero       { padding: 48px 40px 64px; }
+  .hero-title         { font-size: 60px; }
+  .landing-section    { padding: 70px 40px; }
+  .landing-section.alt-bg { padding: 70px 40px; }
+  .teaser-split       { gap: 36px; }
+  .section-title      { font-size: 34px; }
+}
+
+/* ══════════════════════════════════════════════════════════════ */
+/*  RESPONSIVE — mobile ≤ 768px                                  */
+/* ══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Header — hide nav labels, show icons only */
+  .global-header      { padding: 0 12px; gap: 8px; }
+  .logo-text-grad     { font-size: 15px; }
+  .nav-tab            { padding: 6px 10px; font-size: 11px; gap: 4px; }
+  .nav-tab span:last-child { display: none; }   /* hide text, keep icon */
+  .header-extras      { gap: 4px; }
+
+  /* Landing hero */
+  .landing-hero       { padding: 36px 20px 56px; min-height: calc(100dvh - 52px); }
+  .hero-title         { font-size: 42px; letter-spacing: -2px; }
+  .hero-subtitle      { font-size: 15px; }
+  .hero-ctas          { flex-direction: column; gap: 10px; }
+  .cta-primary, .cta-secondary { width: 100%; justify-content: center; }
+
+  /* Sections */
+  .landing-section    { padding: 52px 20px; }
+  .landing-section.alt-bg { padding: 52px 20px; }
+  .section-title      { font-size: 28px; letter-spacing: -.5px; }
+  .section-desc       { font-size: 14px; }
+
+  /* Feature grid: 1 column */
+  .feature-grid       { grid-template-columns: 1fr; gap: 12px; }
+
+  /* Steps: stack vertically */
+  .steps-row          { flex-direction: column; gap: 0; align-items: stretch; }
+  .step-wrap          { flex-direction: column; align-items: stretch; }
+  .step-arrow         { transform: rotate(90deg); align-self: center; padding: 8px 0; }
+  .step-card          { flex: none; }
+
+  /* Teaser: single column */
+  .teaser-split       { grid-template-columns: 1fr; gap: 28px; }
+  .teaser-visual      { justify-content: flex-start; }
+
+  /* Footer CTA */
+  .landing-footer-cta { padding: 56px 20px; }
+  .footer-cta-title   { font-size: 26px; }
+  .footer-cta-sub     { font-size: 14px; }
+
+  /* Left / right panels become full-width overlays */
+  .left-panel         { position: absolute; top: 0; left: 0; bottom: 0; z-index: 50; width: 280px !important; }
+  .left-panel.closed  { width: 0 !important; }
+  .right-panel        { position: absolute; top: 0; right: 0; bottom: 0; z-index: 50; width: 100% !important; max-width: 340px; }
+  .right-panel.closed { width: 0 !important; }
+
+  /* Questionnaire */
+  .quest-card         { padding: 28px 20px; }
+  .quest-title        { font-size: 18px; }
+
+  /* Avatar page */
+  .avatar-split       { flex-direction: column; }
+  .avatar-info-col    { width: 100%; border-left: none; border-top: 1px solid var(--border); }
+}
+
+/* ══════════════════════════════════════════════════════════════ */
+/*  RESPONSIVE — small mobile ≤ 480px                            */
+/* ══════════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .global-header      { padding: 0 10px; height: 48px; }
+  .logo-text-grad     { font-size: 14px; }
+
+  .landing-hero       { padding: 28px 16px 48px; }
+  .hero-title         { font-size: 34px; letter-spacing: -1.5px; }
+  .hero-badge         { font-size: 11px; padding: 5px 12px; }
+  .hero-subtitle      { font-size: 14px; }
+
+  .landing-section    { padding: 40px 16px; }
+  .landing-section.alt-bg { padding: 40px 16px; }
+  .section-title      { font-size: 24px; }
+  .section-desc       { font-size: 13px; }
+
+  .feature-card       { padding: 22px 18px; }
+  .step-card          { padding: 20px 18px; }
+
+  .footer-cta-title   { font-size: 22px; }
+  .landing-footer-cta { padding: 40px 16px; }
+
+  /* Health page */
+  .health-main-grid   { gap: 10px; }
+  .sc-title           { font-size: 14px; }
+}
+
 .health-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
 .health-panel-heading { font-size: 13px; font-weight: 700; color: var(--text2); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 .improvement-badge { font-size: 11px; color: var(--green); font-weight: 600; background: rgba(57,255,135,0.1); border: 1px solid rgba(57,255,135,0.3); padding: 3px 10px; border-radius: 20px; }

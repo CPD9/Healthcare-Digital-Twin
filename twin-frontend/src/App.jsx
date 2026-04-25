@@ -1,3 +1,6 @@
+"use client";
+import './twin.css';
+
 /**
  * App.jsx — Two-page React UI for TWIN (Vite ES module version)
  *
