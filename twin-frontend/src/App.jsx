@@ -7,12 +7,23 @@ import Spline from '@splinetool/react-spline';
 import {
   Dna, Activity, UserRound, Moon, Zap, Apple, Cigarette, Wine,
   TrendingUp, MessageCircle, Brain, Heart, Wind, User, BarChart3,
-  Sliders, ClipboardList, FlaskConical, ArrowRight, Trash2, Send,
+  Sliders, ClipboardList, ArrowRight, Trash2, Send, Home, Code2,
 } from 'lucide-react';
 
 /* Icon helper — renders a Lucide component cleanly */
 const Ico = ({ icon: Icon, size = 16, ...p }) =>
   Icon ? <Icon size={size} strokeWidth={1.75} {...p} /> : null;
+
+/* Mobile detection hook */
+function useIsMobile() {
+  const [mobile, setMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 768);
+  useEffect(() => {
+    const fn = () => setMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', fn, { passive: true });
+    return () => window.removeEventListener('resize', fn);
+  }, []);
+  return mobile;
+}
 import {
   generateResponse,
   PRESETS, PRESET_FRIENDLY, PRESET_INFO,
@@ -131,6 +142,35 @@ function GlobalHeader({ page, onNavigate, extras }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════ */
+/*  MOBILE BOTTOM NAVIGATION                                       */
+/* ═══════════════════════════════════════════════════════════════ */
+
+function MobileNav({ page, onNavigate }) {
+  const items = [
+    { id: 'landing',  label: 'Home',   icon: Home },
+    { id: 'explorer', label: 'DNA',    icon: Dna },
+    { id: 'twin',     label: 'Health', icon: Activity },
+    { id: 'avatar',   label: 'Avatar', icon: UserRound },
+  ];
+  return (
+    <nav className="mobile-nav" aria-label="Main navigation">
+      {items.map(({ id, label, icon }) => {
+        const isActive = page === id || (page === 'questionnaire' && id === 'twin');
+        return (
+          <button key={id}
+            className={`mobile-nav-item${isActive ? ' active' : ''}`}
+            onClick={() => onNavigate(id)}
+            aria-label={label}>
+            <Ico icon={icon} size={22}/>
+            <span className="mobile-nav-label">{label}</span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════ */
 /*  LANDING PAGE                                                   */
 /* ═══════════════════════════════════════════════════════════════ */
 
@@ -161,7 +201,7 @@ function LandingPage({ onNavigate }) {
           <div className="hero-badge"><Dna size={12} style={{marginRight:4}}/> Personal health · DNA platform</div>
           <h1 className="hero-title">Meet <span className="hero-gradient">TWIN</span></h1>
           <p className="hero-subtitle">
-            Explore your DNA in 3D, project your 5-year health trajectory, and chat with an AI that knows your biology — no science degree needed.
+            Your next 5 years of health, visualized — by your DNA and an AI that gets you.
           </p>
           <div className="hero-ctas">
             <button className="cta-primary" onClick={() => onNavigate('questionnaire')}>
@@ -561,6 +601,64 @@ function TwinHealthPage({ answers, onReset, twinChat }) {
         </div>
       </div>
 
+      {/* Fitness Programme */}
+      <div className="connect-fitness-panel">
+        <div className="health-panel-heading" style={{ marginBottom: 12 }}>
+          <Activity size={14}/> Your Personalised Fitness Programme
+        </div>
+        <div className="connect-fitness-inner">
+          <div className="connect-fitness-text">
+            {(() => {
+              const act = answers.activity;
+              if (act === 'sedentary') return (
+                <>
+                  <p className="connect-fitness-desc" style={{ marginBottom: 6 }}>
+                    <strong style={{ color: 'var(--text)' }}>Starting point: Build the habit.</strong>
+                  </p>
+                  <p className="connect-fitness-desc">
+                    You reported a sedentary lifestyle. Begin with 10–15 min daily walks and two short bodyweight sessions per week. Even light movement reduces all-cause mortality by up to 20%.
+                  </p>
+                </>
+              );
+              if (act === 'light') return (
+                <>
+                  <p className="connect-fitness-desc" style={{ marginBottom: 6 }}>
+                    <strong style={{ color: 'var(--text)' }}>Next step: Add structure.</strong>
+                  </p>
+                  <p className="connect-fitness-desc">
+                    You have some activity. Aim for 3 × 30 min sessions per week — a mix of cardio (brisk walking, cycling) and resistance training. This will meaningfully shift your 5-year trajectory.
+                  </p>
+                </>
+              );
+              if (act === 'moderate') return (
+                <>
+                  <p className="connect-fitness-desc" style={{ marginBottom: 6 }}>
+                    <strong style={{ color: 'var(--text)' }}>Keep building: Add intensity.</strong>
+                  </p>
+                  <p className="connect-fitness-desc">
+                    Solid foundation. To unlock the next tier of longevity benefit, add one HIIT session per week and increase your weekly step count to 8,000+. Progressive overload in strength training will further slow biological aging.
+                  </p>
+                </>
+              );
+              // active or very_active
+              return (
+                <>
+                  <p className="connect-fitness-desc" style={{ marginBottom: 6 }}>
+                    <strong style={{ color: 'var(--text)' }}>Optimise: Recovery &amp; consistency.</strong>
+                  </p>
+                  <p className="connect-fitness-desc">
+                    Your activity level is excellent. Focus on recovery quality — sleep, HRV monitoring, and periodised training. Combining aerobic fitness with resistance training delivers the greatest longevity benefit.
+                  </p>
+                </>
+              );
+            })()}
+          </div>
+          <button className="connect-fitness-btn">
+            <Activity size={13} style={{ marginRight: 7 }}/> Connect Fitness Tracker · Coming soon
+          </button>
+        </div>
+      </div>
+
       {/* Twin chat */}
       <div className="health-panel health-chat-panel">
         <div className="health-panel-heading">Ask TWIN About Your Results</div>
@@ -612,6 +710,7 @@ function Message({ msg }) {
 /* ═══════════════════════════════════════════════════════════════ */
 function ChatPanel({ open, messages, loading, suggestions, onSend, onClear, onClose, floating, compact }) {
   const [input, setInput] = useState('');
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const endRef  = useRef(null);
   const textRef = useRef(null);
 
@@ -637,8 +736,16 @@ function ChatPanel({ open, messages, loading, suggestions, onSend, onClear, onCl
           <div ref={endRef}/>
         </div>
         {suggestions.length > 0 && (
-          <div className="suggestions-row">
-            {suggestions.map((s, i) => <button key={i} className="sugg-chip" onClick={() => handleSend(s)}>{s}</button>)}
+          <div className="suggestions-dropdown">
+            <button className="suggestions-toggle" onClick={() => setSuggestionsOpen(v => !v)}>
+              <span>Suggested questions</span>
+              <svg className={`sugg-arrow${suggestionsOpen ? ' open' : ''}`} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            {suggestionsOpen && (
+              <div className="suggestions-row">
+                {suggestions.map((s, i) => <button key={i} className="sugg-chip" onClick={() => { handleSend(s); setSuggestionsOpen(false); }}>{s}</button>)}
+              </div>
+            )}
           </div>
         )}
         <div className="chat-input-area">
@@ -670,26 +777,26 @@ function ChatPanel({ open, messages, loading, suggestions, onSend, onClear, onCl
                 <path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
               </svg>
             </button>
-            {onClose && (
-              <button className="chat-hbtn" onClick={onClose} title="Close chat">Close</button>
-            )}
+
           </div>
         </div>
         <div className="messages-area">
           {messages.map(m => <Message key={m.id} msg={m}/>)}
-          {loading && (
-            <div className="msg-row ai fade-up">
-              <div className="msg-avatar ai">T</div>
-              <div className="msg-bubble ai"><TypingDots/></div>
-            </div>
-          )}
           <div ref={endRef}/>
         </div>
         {suggestions.length > 0 && (
-          <div className="suggestions-row">
-            {suggestions.map((s, i) => (
-              <button key={i} className="sugg-chip" onClick={() => handleSend(s)}>{s}</button>
-            ))}
+          <div className="suggestions-dropdown">
+            <button className="suggestions-toggle" onClick={() => setSuggestionsOpen(v => !v)}>
+              <span>Suggested questions</span>
+              <svg className={`sugg-arrow${suggestionsOpen ? ' open' : ''}`} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            {suggestionsOpen && (
+              <div className="suggestions-row">
+                {suggestions.map((s, i) => (
+                  <button key={i} className="sugg-chip" onClick={() => { handleSend(s); setSuggestionsOpen(false); }}>{s}</button>
+                ))}
+              </div>
+            )}
           </div>
         )}
         <div className="chat-input-area">
@@ -790,7 +897,7 @@ function VariantAnalyser({ analysis }) {
 
   return (
     <div className="panel-section">
-      <SectionHeader title={<><FlaskConical size={14}/> Evo2 Variant Analysis</>}
+      <SectionHeader title={<><Dna size={14}/> Evo2 Variant Analysis</>}
         info="<strong>What is this?</strong><br/>Calls the <em>real</em> Evo2 AI (trained on 8.8 trillion DNA letters) to score a single-letter change at any position. A negative Δ score means Evo2 thinks the mutation is unusual — potentially damaging."/>
 
       <div className="va-row">
@@ -881,7 +988,7 @@ function LeftPanel({ open, seqInput, setSeqInput, analysis, onAnalyze, onClear, 
           {/* Input */}
           <div className="panel-section">
             <SectionHeader title="Paste Your DNA Code Here"
-              info="<strong>What is a DNA code?</strong><br/>DNA is your body's instruction manual, written using just 4 letters: <strong style='color:#3b82f6'>A</strong>, <strong style='color:#f59e0b'>T</strong>, <strong style='color:#22c55e'>G</strong>, and <strong style='color:#be3a1e'>C</strong>. You can paste any sequence here and TWIN will analyse it."/>
+              info="<strong>What is a DNA code?</strong><br/>DNA is your body's instruction manual, written using just 4 letters: <strong style='color:#4a8ff0'>A</strong>, <strong style='color:#f0a830'>T</strong>, <strong style='color:#4aba70'>G</strong>, and <strong style='color:#e05050'>C</strong>. You can paste any sequence here and TWIN will analyse it."/>
             <div className="section-note">
               Your body's code uses just 4 letters.
               {' '}<strong style={{ color: 'var(--A)' }}>A</strong> always pairs with <strong style={{ color: 'var(--T)' }}>T</strong>
@@ -993,6 +1100,8 @@ function ExplorerPage({ sharedState }) {
     tooltip, setTooltip, addMsg, resolveTyping, handleSend, handleClearChat,
   } = sharedState;
 
+  const isMobile = useIsMobile();
+
   const stats = analysis
     ? { len: analysis.seq.length, gc: gcContent(analysis.seq) + '%', at: (100 - gcContent(analysis.seq)) + '%', score: analysis.score.toFixed(3) }
     : { len: 0, gc: null, at: null, score: null };
@@ -1055,8 +1164,41 @@ function ExplorerPage({ sharedState }) {
               <ChatPanel
                 open={true} messages={messages} loading={chatLoading}
                 suggestions={suggestions} onSend={handleSend} onClear={handleClearChat}
+                onClose={isMobile ? () => setRightOpen(false) : undefined}
               />
             </div>
+          )}
+          {/* Tap-outside overlay to close panels on mobile */}
+          {isMobile && (leftOpen || rightOpen) && (
+            <div
+              style={{
+                position: 'fixed', inset: 0,
+                bottom: 'calc(var(--nav-total, 56px))',
+                zIndex: 19,
+                background: 'rgba(0,0,0,0.35)',
+              }}
+              onClick={() => { setLeftOpen(false); setRightOpen(false); }}
+            />
+          )}
+          {/* Mobile FABs — shown only on mobile via CSS */}
+          <div className="mobile-explorer-fabs">
+            <button
+              className={`mobile-fab${leftOpen ? ' active' : ''}`}
+              onClick={() => { const next = !leftOpen; setLeftOpen(next); if (next) setRightOpen(false); }}>
+              <Code2 size={14}/> DNA Code
+            </button>
+            <button
+              className={`mobile-fab${rightOpen ? ' active' : ''}`}
+              onClick={() => { const next = !rightOpen; setRightOpen(next); if (next) setLeftOpen(false); }}>
+              <MessageCircle size={14}/> Ask TWIN
+            </button>
+          </div>
+          {/* Desktop FAB */}
+          {!leftOpen && !rightOpen && (
+            <button className="explorer-chat-fab"
+              onClick={() => { setRightOpen(true); setLeftOpen(false); }}>
+              <MessageCircle size={15}/> Ask TWIN
+            </button>
           )}
         </div>
       </div>
@@ -1134,6 +1276,16 @@ function AvatarCanvas({ activeRegion, onRegionClick }) {
                 cam.position.z *= -1;
                 cam.lookAt(0, 0, 0);
               }
+              // Set canvas background color only — does NOT affect model materials
+              const renderer = splineApp._renderer || splineApp.renderer;
+              if (renderer) {
+                renderer.setClearColor(0x050f07, 0);
+                renderer.setClearAlpha(0);
+              }
+              // Transparent canvas so CSS green gradient shows through
+              if (splineApp.canvas) {
+                splineApp.canvas.style.background = 'transparent';
+              }
             } catch (e) { /* ignore */ }
             window.setTimeout(() => {
               try { splineApp.stop(); } catch (e) { /* ignore */ }
@@ -1176,9 +1328,11 @@ function StatRing({ label, value, max, color }) {
 }
 
 function AvatarPage({ sharedState, twinAnswers, onOpenHealthResults }) {
-  const { analysis, messages, chatLoading, suggestions, handleSend, handleClearChat } = sharedState;
+  const { analysis, messages, chatLoading, suggestions, handleSend, handleClearChat, avatarLeftTab, setAvatarLeftTab } = sharedState;
   const [activeRegion, setActiveRegion] = useState('dna-helix');
-  const [chatOpen, setChatOpen]         = useState(false);
+  const [mobileTab, setMobileTab]       = useState('avatar');
+
+  const isMobile = useIsMobile();
 
   const region   = BODY_REGIONS.find(r => r.id === activeRegion) || BODY_REGIONS[2];
   const gcPct    = analysis ? gcContent(analysis.seq) : 52;
@@ -1187,8 +1341,9 @@ function AvatarPage({ sharedState, twinAnswers, onOpenHealthResults }) {
 
   return (
     <div className="page page-avatar">
-      <div className="avatar-body">
-        <div className="avatar-hud-left">
+      <div className="avatar-body" data-tab={mobileTab}>
+        <div className={`avatar-hud-left${avatarLeftTab === 'chat' ? ' chat-mode' : ''}`}>
+          {avatarLeftTab === 'stats' && (<>
           <div className="hud-panel">
             <div className="hud-title"><Dna size={12}/> DNA Composition</div>
             <div className="stat-rings-row">
@@ -1217,7 +1372,7 @@ function AvatarPage({ sharedState, twinAnswers, onOpenHealthResults }) {
               })
             ) : (
               <div style={{ fontSize: 11, color: 'var(--text3)', textAlign: 'center', padding: '12px 0' }}>
-                Load a DNA sequence on Page 1<br/>to see base composition
+                Load a DNA sequence on the DNA tab<br/>to see base composition
               </div>
             )}
           </div>
@@ -1235,76 +1390,103 @@ function AvatarPage({ sharedState, twinAnswers, onOpenHealthResults }) {
               <div style={{ fontSize: 11, color: 'var(--text3)', textAlign: 'center', padding: '8px 0' }}>No sequence loaded</div>
             )}
           </div>
-        </div>
 
-        <div className="avatar-center">
-          <div className="avatar-title-badge">Click a body region to explore its DNA story</div>
-          <AvatarCanvas activeRegion={activeRegion} onRegionClick={setActiveRegion}/>
-        </div>
-
-        <div className="avatar-hud-right">
-          <div className="hud-panel region-info-card" style={{ borderColor: region.color }}>
-            <div className="hud-title" style={{ color: region.color }}>
-              <Ico icon={region.icon} size={12}/> {region.label}
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.6, marginTop: 8 }}>
-              {region.info}
-            </div>
-            <div className="region-stat-box" style={{ borderColor: region.color + '44' }}>
-              <span style={{ fontSize: 10, color: 'var(--text3)' }}>Did you know?</span><br/>
-              <span style={{ fontSize: 11, color: 'var(--text2)', lineHeight: 1.5 }}>{region.stat}</span>
-            </div>
-            <button className="seq-btn primary" style={{ marginTop: 12, fontSize: 11 }}
-              onClick={() => { window._twinAsk && window._twinAsk(`Tell me about the ${region.label} gene`); setChatOpen(true); }}>
-              Ask TWIN about this
-            </button>
-          </div>
-
+          {/* On mobile stats tab — also show questionnaire link */}
           {twinAnswers && (
             <div className="hud-panel">
               <div className="hud-title"><ClipboardList size={12}/> Questionnaire Results</div>
               <div style={{ fontSize: 11, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 10 }}>
-                Your health responses are ready. Open the results dashboard to review trajectory and levers.
+                Your health responses are ready. View your trajectory and levers.
               </div>
               <button className="seq-btn primary" onClick={onOpenHealthResults}>View Twin Health Results</button>
             </div>
           )}
+          </>)}
+          {avatarLeftTab === 'chat' && (
+            <ChatPanel
+              open={true}
+              messages={messages} loading={chatLoading}
+              suggestions={suggestions} onSend={handleSend}
+              onClear={handleClearChat}
+            />
+          )}
+        </div>
 
-          <div className="hud-panel">
-            <div className="hud-title"><UserRound size={12}/> Body Region Map</div>
-            {BODY_REGIONS.map(r => (
-              <div key={r.id}
-                className={`region-legend-row ${activeRegion === r.id ? 'active' : ''}`}
-                style={{ '--rc': r.color }}
-                onClick={() => setActiveRegion(r.id)}>
-                <span><Ico icon={r.icon} size={12}/></span>
-                <span style={{ flex: 1 }}>{r.label}</span>
-                <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'JetBrains Mono, monospace' }}>{r.gene}</span>
+        <div className="avatar-center">
+          <div className="avatar-title-badge">Tap a body region to explore its DNA story</div>
+          <AvatarCanvas activeRegion={activeRegion} onRegionClick={(id) => {
+            setActiveRegion(id);
+            if (isMobile) setMobileTab('info');
+          }}/>
+
+        </div>
+
+        <div className="avatar-hud-right">
+          <div className="avatar-hud-right-panels">
+            <div className="hud-panel region-info-card" style={{ borderColor: region.color }}>
+              <div className="hud-title" style={{ color: region.color }}>
+                <Ico icon={region.icon} size={12}/> {region.label}
               </div>
-            ))}
+              <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.6, marginTop: 8 }}>
+                {region.info}
+              </div>
+              <div className="region-stat-box" style={{ borderColor: region.color + '44' }}>
+                <span style={{ fontSize: 10, color: 'var(--text3)' }}>Did you know?</span><br/>
+                <span style={{ fontSize: 11, color: 'var(--text2)', lineHeight: 1.5 }}>{region.stat}</span>
+              </div>
+              <button className="seq-btn primary" style={{ marginTop: 12, fontSize: 11 }}
+                onClick={() => { window._twinAsk && window._twinAsk(`Tell me about the ${region.label} gene`); }}>
+                Ask TWIN about this
+              </button>
+            </div>
+
+            {twinAnswers && !isMobile && (
+              <div className="hud-panel">
+                <div className="hud-title"><ClipboardList size={12}/> Questionnaire Results</div>
+                <div style={{ fontSize: 11, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 10 }}>
+                  Your health responses are ready. Open the results dashboard to review trajectory and levers.
+                </div>
+                <button className="seq-btn primary" onClick={onOpenHealthResults}>View Twin Health Results</button>
+              </div>
+            )}
+
+            <div className="hud-panel">
+              <div className="hud-title"><UserRound size={12}/> Body Region Map</div>
+              {BODY_REGIONS.map(r => (
+                <div key={r.id}
+                  className={`region-legend-row ${activeRegion === r.id ? 'active' : ''}`}
+                  style={{ '--rc': r.color }}
+                  onClick={() => { setActiveRegion(r.id); }}>
+                  <span><Ico icon={r.icon} size={12}/></span>
+                  <span style={{ flex: 1 }}>{r.label}</span>
+                  <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'JetBrains Mono, monospace' }}>{r.gene}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <button className="avatar-chat-toggle" onClick={() => setChatOpen(o => !o)}>
-            {chatOpen ? 'Close Chat' : 'Ask TWIN'}
-          </button>
 
-          {chatOpen && (
-            <div className="avatar-chat-shell">
-              <ChatPanel
-                open={true}
-                messages={messages} loading={chatLoading}
-                suggestions={suggestions} onSend={handleSend}
-                onClear={handleClearChat}
-                onClose={() => setChatOpen(false)}
-              />
-            </div>
-          )}
+        </div>
+
+        {/* Mobile tab bar — only visible on mobile via CSS */}
+        <div className="avatar-mobile-tabs">
+          {[
+            { id: 'avatar', label: 'Avatar',  icon: UserRound },
+            { id: 'stats',  label: 'DNA Stats', icon: BarChart3 },
+            { id: 'info',   label: 'Region',  icon: Brain },
+          ].map(t => (
+            <button key={t.id}
+              className={`avatar-tab-btn${mobileTab === t.id ? ' active' : ''}`}
+              onClick={() => setMobileTab(t.id)}>
+              <Ico icon={t.icon} size={18}/>
+              <span>{t.label}</span>
+            </button>
+          ))}
         </div>
       </div>
     </div>
   );
 }
-
 /* ═══════════════════════════════════════════════════════════════ */
 /*  APP ROOT                                                       */
 /* ═══════════════════════════════════════════════════════════════ */
@@ -1319,6 +1501,7 @@ export default function App() {
   const [chatLoading,   setChatLoading]   = useState(false);
   const [suggestions,   setSuggestions]   = useState(DEFAULT_SUGGESTIONS);
   const [twinAnswers,   setTwinAnswers]   = useState(null);
+  const [avatarLeftTab, setAvatarLeftTab] = useState('stats');
   const [healthMsgs,    setHealthMsgs]    = useState([]);
   const [healthLoading, setHealthLoading] = useState(false);
   const [healthSuggs,   setHealthSuggs]   = useState(HEALTH_SUGGESTIONS);
@@ -1445,7 +1628,7 @@ export default function App() {
   useEffect(() => {
     window._twinAsk = (q) => {
       if (page === 'explorer') { if (!rightOpen) { setRightOpen(true); setLeftOpen(false); } handleSend(q); }
-      else if (page === 'avatar') handleSend(q);
+      else if (page === 'avatar') { setAvatarLeftTab('chat'); handleSend(q); }
       else if (page === 'twin') handleHealthSend(q);
     };
     return () => { window._twinAsk = null; };
@@ -1454,7 +1637,11 @@ export default function App() {
   /* Boot */
   useEffect(() => {
     setTimeout(() => setLoaded(true), 600);
-    addMsg('ai', `Welcome to **TWIN** — your personal DNA explorer.\n\nNo science background needed.\n\n**Get started:**\n- **Drag** the 3D spiral to spin it\n- **Click a Famous Snippet** on the left\n- **Open Avatar Lab** to see DNA in your body\n- **Ask me anything** below`);
+    const isMob = window.innerWidth <= 768;
+    addMsg('ai', isMob
+      ? `Welcome to **TWIN** — your personal DNA explorer.\n\nNo science background needed.\n\n**Get started:**\n- Tap **DNA Code** to paste a sequence\n- Use the **bottom nav** to explore all features\n- Tap **Ask TWIN** to chat about your DNA`
+      : `Welcome to **TWIN** — your personal DNA explorer.\n\nNo science background needed.\n\n**Get started:**\n- **Drag** the 3D spiral to spin it\n- **Click a Famous Snippet** on the left\n- **Open Avatar Lab** to see DNA in your body\n- **Ask me anything** below`
+    );
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1463,6 +1650,7 @@ export default function App() {
     seqInput, setSeqInput, analysis, setAnalysis,
     messages, chatLoading, suggestions, setSuggestions,
     tooltip, setTooltip, addMsg, resolveTyping, handleSend, handleClearChat,
+    avatarLeftTab, setAvatarLeftTab,
   };
 
   /* Header extras per page */
@@ -1471,23 +1659,32 @@ export default function App() {
       {page === 'explorer' && (
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {analysis && (
-            <div style={{ display: 'flex', gap: 6 }}>
-              <div className="stat-pill"><span className="stat-dot" style={{ background: 'var(--green)' }}/>{analysis.seq.length} letters</div>
-              <div className="stat-pill"><span className="stat-dot" style={{ background: 'var(--cyan)' }}/>{gcContent(analysis.seq)}% G+C</div>
+            <div style={{ display: 'flex', gap: 6 }} className="explorer-stat-pills">
+              <div className="stat-pill"><span className="stat-dot" style={{ background: 'var(--green)' }}/>{analysis.seq.length} bp</div>
+              <div className="stat-pill"><span className="stat-dot" style={{ background: 'var(--cyan)' }}/>{gcContent(analysis.seq)}% GC</div>
             </div>
           )}
-          <div className="header-btns">
+          {/* Desktop-only toggle buttons — mobile uses FABs */}
+          <div className="header-btns explorer-desktop-btns">
             <button className={`hbtn ${leftOpen ? 'active' : ''}`} onClick={() => { const next = !leftOpen; setLeftOpen(next); if (next) setRightOpen(false); }}>DNA Code</button>
             <button className={`hbtn ${rightOpen ? 'active' : ''}`} onClick={() => { const next = !rightOpen; setRightOpen(next); if (next) setLeftOpen(false); }}>Ask TWIN</button>
           </div>
         </div>
       )}
-      {page === 'avatar' && analysis && (
-        <span style={{ fontSize: 11, color: 'var(--text3)' }}>{analysis.seq.length} letters · Score {analysis.score.toFixed(3)}</span>
+      {page === 'avatar' && (
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {analysis && (
+            <span style={{ fontSize: 11, color: 'var(--text3)', fontFamily: 'JetBrains Mono, monospace' }}>{analysis.seq.length} bp · {analysis.score.toFixed(2)}</span>
+          )}
+          <div className="header-btns">
+            <button className={'hbtn '+(avatarLeftTab === 'stats' ? 'active' : '')} onClick={() => setAvatarLeftTab('stats')}>DNA Stats</button>
+            <button className={'hbtn '+(avatarLeftTab === 'chat' ? 'active' : '')} onClick={() => setAvatarLeftTab('chat')}>Ask TWIN</button>
+          </div>
+        </div>
       )}
       {page === 'twin' && twinAnswers && (
         <span style={{ fontSize: 11, color: 'var(--green)', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>
-          Score: {Math.round(computeCurrentScore(twinAnswers))}/100
+          {Math.round(computeCurrentScore(twinAnswers))}/100
         </span>
       )}
     </>
@@ -1520,6 +1717,7 @@ export default function App() {
           />
         )}
       </div>
+      <MobileNav page={page} onNavigate={navigate}/>
     </div>
   );
 }

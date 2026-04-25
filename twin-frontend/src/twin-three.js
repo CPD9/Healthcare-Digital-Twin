@@ -61,8 +61,8 @@ function tube(group, a, b, radius, color) {
 export function initThreeJS(container) {
   /* Scene */
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x050512);
-  scene.fog = new THREE.FogExp2(0x050512, 0.022);
+  scene.background = new THREE.Color(0x040d06);
+  scene.fog = new THREE.FogExp2(0x040d06, 0.022);
 
   /* Camera */
   const camera = new THREE.PerspectiveCamera(
@@ -87,7 +87,7 @@ export function initThreeJS(container) {
   controls.maxDistance    = 60;
 
   /* Lights */
-  scene.add(new THREE.AmbientLight(0x223366, 3));
+  scene.add(new THREE.AmbientLight(0x1a3322, 3));
   [
     [0x00e5ff, [12,  12,  8], 5],
     [0xff4d8d, [-12, -10, 6], 4],
@@ -163,7 +163,7 @@ export function initThreeJS(container) {
   }
   const ptGeo = new THREE.BufferGeometry();
   ptGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-  scene.add(new THREE.Points(ptGeo, new THREE.PointsMaterial({ color: 0x334466, size: 0.12 })));
+  scene.add(new THREE.Points(ptGeo, new THREE.PointsMaterial({ color: 0x1a3d20, size: 0.12 })));
 
   /* ── Raycasting / hover ──────────────────────────────────────── */
   const raycaster    = new THREE.Raycaster();
