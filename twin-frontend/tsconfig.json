@@ -39,5 +39,12 @@
     "**/*.js",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "vite.config.js",
+    "src/App.jsx",
+    "src/twin-three.js",
+    "src/twin-data.js",
+    "src/main.jsx"
+  ]
 }

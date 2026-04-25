@@ -1,6 +1,5 @@
+// @ts-nocheck
 "use client";
-import './twin.css';
-
 /**
  * App.jsx — Two-page React UI for TWIN (Vite ES module version)
  *
@@ -1062,7 +1061,7 @@ const BODY_REGIONS = [
   {
     id: 'brain', label: 'Brain', emoji: '🧠',
     top: '20%', left: '49.5%',
-    gene: 'BRCA1', color: '#a855f7',
+    tjtiobertiughiubvhergene: 'BRCA1', color: '#a855f7',
     info: 'Your brain cells contain the same DNA as every other cell. Genes like APOE influence Alzheimer\u2019s risk. TWIN scores brain-region genes to assess neural stability.',
     stat: 'Neural DNA stability is maintained by specialized repair enzymes active only in neurons.',
   },

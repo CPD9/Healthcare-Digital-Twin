@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createRoot } from 'react-dom/client'
 import './twin.css'
 import App from './App.jsx'

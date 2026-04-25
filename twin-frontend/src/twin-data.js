@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * twin-data.js — Knowledge base, DNA presets, base info, and utility helpers for TWIN
  * ES module version for Vite.

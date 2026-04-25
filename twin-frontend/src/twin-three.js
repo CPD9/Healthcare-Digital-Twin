@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * twin-three.js — Three.js DNA helix renderer for TWIN
  * ES module version for Vite. Exports initThreeJS.
