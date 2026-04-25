@@ -53,7 +53,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 .logo-text  {
   font-size: 16px; font-weight: 700; letter-spacing: -.3px;
   background: linear-gradient(135deg, var(--cyan), var(--green));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
 }
 .logo-sub   { font-size: 11px; color: var(--text3); margin-left: 4px; margin-top: 1px; }
 
@@ -607,7 +607,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 .logo-text-grad {
   font-size: 17px; font-weight: 800; letter-spacing: -.4px;
   background: linear-gradient(135deg, var(--cyan), var(--green));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
 }
 .global-nav { display: flex; gap: 4px; flex: 1; }
 .nav-tab {
