@@ -54,32 +54,32 @@ function projectTrajectory(answers, override) {
 
 function getTopLevers(answers) {
   const levers = [
-    { key: 'sleep',     label: 'Sleep',     icon: '😴', currentLabel: `${answers.sleep} hrs`,
+    { key: 'sleep',     label: 'Sleep',     icon: 'STGS', currentLabel: `${answers.sleep} hrs`,
       improve: { value: '8', label: '8 hrs/night' },
       impact: parseFloat(answers.sleep) < 7 ? 'high' : parseFloat(answers.sleep) < 8 ? 'medium' : 'low',
       desc: 'Optimal sleep is 7–9 hours. It boosts immune function, memory consolidation, and cellular repair.',
     },
-    { key: 'stress',    label: 'Stress',    icon: '🧘', currentLabel: answers.stress,
+    { key: 'stress',    label: 'Stress',    icon: 'STGS', currentLabel: answers.stress,
       improve: { value: 'low', label: 'Low stress' },
       impact: answers.stress === 'high' ? 'high' : answers.stress === 'medium' ? 'medium' : 'low',
       desc: 'Chronic stress elevates cortisol, accelerating telomere shortening and suppressing immune response.',
     },
-    { key: 'activity',  label: 'Activity',  icon: '🏃', currentLabel: answers.activity,
+    { key: 'activity',  label: 'Activity',  icon: 'STGS', currentLabel: answers.activity,
       improve: { value: 'active', label: 'Active lifestyle' },
       impact: answers.activity === 'sedentary' || answers.activity === 'light' ? 'high' : answers.activity === 'moderate' ? 'medium' : 'low',
       desc: '150 min/week of moderate activity reduces all-cause mortality risk by 30% and slows biological aging.',
     },
-    { key: 'nutrition', label: 'Nutrition', icon: '🥗', currentLabel: answers.nutrition,
+    { key: 'nutrition', label: 'Nutrition', icon: 'STGS', currentLabel: answers.nutrition,
       improve: { value: 'excellent', label: 'Excellent diet' },
       impact: answers.nutrition === 'poor' || answers.nutrition === 'fair' ? 'high' : answers.nutrition === 'good' ? 'medium' : 'low',
       desc: 'A diet rich in whole foods reduces oxidative stress and provides DNA repair substrates.',
     },
-    { key: 'smoking',   label: 'Smoking',   icon: '🚭', currentLabel: answers.smoking,
+    { key: 'smoking',   label: 'Smoking',   icon: 'STGS', currentLabel: answers.smoking,
       improve: { value: 'none', label: 'Stop smoking' },
       impact: answers.smoking === 'regular' ? 'high' : answers.smoking === 'occasional' ? 'medium' : 'low',
       desc: 'Smoking is the single largest modifiable cause of DNA damage and accelerated aging.',
     },
-    { key: 'alcohol',   label: 'Alcohol',   icon: '🍷', currentLabel: answers.alcohol,
+    { key: 'alcohol',   label: 'Alcohol',   icon: 'STGS', currentLabel: answers.alcohol,
       improve: { value: 'light', label: 'Light/none' },
       impact: answers.alcohol === 'heavy' ? 'high' : answers.alcohol === 'moderate' ? 'medium' : 'low',
       desc: 'Heavy alcohol use increases DNA strand-break frequency and impairs cellular repair mechanisms.',
@@ -104,19 +104,19 @@ function GlobalHeader({ page, onNavigate, extras }) {
   return (
     <header className="global-header">
       <button className="logo-btn" onClick={() => onNavigate('landing')}>
-        <span style={{ fontSize: 20 }}>🧬</span>
+        <span style={{ fontSize: 11, letterSpacing: '.08em', color: 'var(--cyan)', fontFamily: 'JetBrains Mono, monospace' }}>STGS</span>
         <span className="logo-text-grad">TWIN</span>
       </button>
       <nav className="global-nav">
         {[
-          { id: 'explorer', label: 'DNA Explorer', icon: '🔬' },
-          { id: 'twin',     label: 'Twin Health',  icon: '💓' },
-          { id: 'avatar',   label: 'Avatar Lab',   icon: '🧑‍🔬' },
+          { id: 'explorer', label: 'DNA Explorer', icon: 'STGS' },
+          { id: 'twin',     label: 'Twin Health',  icon: 'STGS' },
+          { id: 'avatar',   label: 'Avatar Lab',   icon: 'STGS' },
         ].map(({ id, label, icon }) => (
           <button key={id}
             className={`nav-tab ${page === id || (page === 'questionnaire' && id === 'twin') ? 'active' : ''}`}
             onClick={() => onNavigate(id)}>
-            <span>{icon}</span> {label}
+            <span>{icon}</span> <span className="nav-label">{label}</span>
           </button>
         ))}
       </nav>
@@ -153,17 +153,17 @@ function LandingPage({ onNavigate }) {
         </div>
 
         <div className="hero-content">
-          <div className="hero-badge">🧬 Your Personal Health &amp; DNA Platform</div>
+          <div className="hero-badge">STGS Personal Health and DNA Platform</div>
           <h1 className="hero-title">Meet <span className="hero-gradient">TWIN</span></h1>
           <p className="hero-subtitle">
             Explore your DNA in 3D, project your 5-year health trajectory, and chat with an AI that knows your biology — no science degree needed.
           </p>
           <div className="hero-ctas">
             <button className="cta-primary" onClick={() => onNavigate('questionnaire')}>
-              💓 Start Twin Health <span className="cta-arrow">→</span>
+              Start Twin Health <span className="cta-arrow">→</span>
             </button>
             <button className="cta-secondary" onClick={() => onNavigate('explorer')}>
-              🔬 Explore DNA
+              Explore DNA
             </button>
           </div>
           <div className="hero-scroll-hint">↓ Scroll to explore</div>
@@ -179,16 +179,16 @@ function LandingPage({ onNavigate }) {
         </p>
         <div className="feature-grid">
           {[
-            { icon: '🌀', title: 'DNA Visualiser', color: 'var(--cyan)',
+            { icon: 'STGS', title: 'DNA Visualiser', color: 'var(--cyan)',
               desc: 'See your DNA as a live 3D double helix. Hover any rung to understand what that letter pair does.',
               cta: 'Explore DNA →', page: 'explorer' },
-            { icon: '💓', title: 'Health Trajectory', color: 'var(--green)',
+            { icon: 'STGS', title: 'Health Trajectory', color: 'var(--green)',
               desc: 'Answer 6 questions about your lifestyle. Get a projected 5-year health curve and your top levers.',
               cta: 'Start Assessment →', page: 'questionnaire' },
-            { icon: '🧑‍🔬', title: 'Avatar Lab', color: 'var(--purple)',
+            { icon: 'STGS', title: 'Avatar Lab', color: 'var(--purple)',
               desc: 'See exactly which genes are active in each body region — brain, heart, liver, and more.',
               cta: 'Open Avatar Lab →', page: 'avatar' },
-            { icon: '💬', title: 'Twin Chat', color: 'var(--amber)',
+            { icon: 'STGS', title: 'Twin Chat', color: 'var(--amber)',
               desc: 'Ask TWIN anything in plain English. It understands your profile and explains complex science simply.',
               cta: 'Ask TWIN →', page: 'twin' },
           ].map(f => (
@@ -208,11 +208,11 @@ function LandingPage({ onNavigate }) {
         <h2 className="section-title">Three steps to your digital twin</h2>
         <div className="steps-row">
           {[
-            { num: '01', icon: '📋', title: 'Tell us about yourself',
+            { num: '01', icon: 'STGS', title: 'Tell us about yourself',
               desc: 'Answer 6 plain-English questions about sleep, stress, activity, and nutrition. Under 2 minutes.' },
-            { num: '02', icon: '📈', title: 'Get your trajectory',
+            { num: '02', icon: 'STGS', title: 'Get your trajectory',
               desc: 'TWIN computes a personalised 5-year health projection and shows your top behaviour levers.' },
-            { num: '03', icon: '⚡', title: 'Change one thing, see the impact',
+            { num: '03', icon: 'STGS', title: 'Change one thing, see the impact',
               desc: 'Toggle one behaviour and watch the projection update instantly. One change, real difference.' },
           ].map((step, i) => (
             <div key={step.num} className="step-wrap">
@@ -248,7 +248,7 @@ function LandingPage({ onNavigate }) {
               ))}
             </div>
             <button className="cta-secondary" style={{ marginTop: 20 }} onClick={() => onNavigate('explorer')}>
-              🔬 Open DNA Explorer →
+              Open DNA Explorer →
             </button>
           </div>
           <div className="teaser-visual">
@@ -275,7 +275,7 @@ function LandingPage({ onNavigate }) {
           <h2 className="footer-cta-title">Ready to meet your twin?</h2>
           <p className="footer-cta-sub">A 2-minute assessment. No sign-up required.</p>
           <button className="cta-primary large" onClick={() => onNavigate('questionnaire')}>
-            💓 Begin Twin Health Assessment <span className="cta-arrow">→</span>
+            Begin Twin Health Assessment <span className="cta-arrow">→</span>
           </button>
         </div>
       </section>
@@ -288,13 +288,13 @@ function LandingPage({ onNavigate }) {
 /* ═══════════════════════════════════════════════════════════════ */
 
 const QUESTIONS = [
-  { id: 'age', icon: '🎂', title: 'How old are you?',
+  { id: 'age', icon: 'STGS', title: 'How old are you?',
     type: 'slider', min: 18, max: 90, step: 1, unit: 'years', defaultValue: 35,
     help: 'Age is the strongest predictor of health trajectory baseline — but lifestyle factors can dramatically offset it.' },
-  { id: 'sleep', icon: '😴', title: 'How many hours of sleep do you get each night?',
+  { id: 'sleep', icon: 'STGS', title: 'How many hours of sleep do you get each night?',
     type: 'slider', min: 3, max: 12, step: 0.5, unit: 'hrs/night', defaultValue: 7,
     help: 'Optimal sleep is 7–9 hours. Both too little and too much are associated with reduced healthspan.' },
-  { id: 'stress', icon: '🧘', title: "What's your typical stress level?",
+  { id: 'stress', icon: 'STGS', title: "What's your typical stress level?",
     type: 'cards', defaultValue: 'medium',
     help: 'Chronic stress accelerates cellular aging through cortisol-driven telomere shortening.',
     options: [
@@ -302,7 +302,7 @@ const QUESTIONS = [
       { value: 'medium', label: 'Medium', desc: 'Some pressure, mostly manageable' },
       { value: 'high',   label: 'High',   desc: 'Frequently stressed or overwhelmed' },
     ] },
-  { id: 'activity', icon: '🏃', title: 'How physically active are you?',
+  { id: 'activity', icon: 'STGS', title: 'How physically active are you?',
     type: 'cards', defaultValue: 'moderate',
     help: '150+ minutes of moderate activity weekly reduces all-cause mortality risk by up to 30%.',
     options: [
@@ -311,7 +311,7 @@ const QUESTIONS = [
       { value: 'moderate',   label: 'Moderate',  desc: '3–4 sessions/week' },
       { value: 'active',     label: 'Active',    desc: '5+ sessions/week, vigorous exercise' },
     ] },
-  { id: 'nutrition', icon: '🥗', title: 'How would you rate your diet quality?',
+  { id: 'nutrition', icon: 'STGS', title: 'How would you rate your diet quality?',
     type: 'cards', defaultValue: 'fair',
     help: 'Diet quality influences oxidative stress levels and DNA repair substrate availability.',
     options: [
@@ -320,7 +320,7 @@ const QUESTIONS = [
       { value: 'good',      label: 'Good',      desc: 'Mostly whole foods, vegetables' },
       { value: 'excellent', label: 'Excellent', desc: 'Whole-food, plant-forward diet' },
     ] },
-  { id: 'smoking', icon: '🚭', title: 'Do you smoke?',
+  { id: 'smoking', icon: 'STGS', title: 'Do you smoke?',
     type: 'cards', defaultValue: 'none',
     help: 'Smoking is the #1 modifiable risk factor for accelerated biological aging and DNA damage.',
     options: [
@@ -385,7 +385,7 @@ function QuestionnairePage({ onComplete }) {
         <div className="quest-nav">
           {step > 0 && <button className="quest-back" onClick={back}>← Back</button>}
           <button className="quest-next" onClick={next}>
-            {isLast ? '✨ See My Twin Health →' : 'Next →'}
+            {isLast ? 'See My Twin Health →' : 'Next →'}
           </button>
         </div>
       </div>
@@ -516,15 +516,15 @@ function TwinHealthPage({ answers, onReset, twinChat }) {
       <div className="health-main-grid">
         <div className="health-panel">
           <div className="health-panel-heading">
-            📈 5-Year Health Trajectory
+            STGS 5-Year Health Trajectory
             {improved && <span className="improvement-badge">+{leverDelta} pts with {activeLever.label} change</span>}
           </div>
           <TrajectoryChart baseline={baseline} improved={improved}/>
-          {!improved && <div className="chart-hint">👆 Select a behaviour lever to see its impact on your trajectory</div>}
+          {!improved && <div className="chart-hint">Select a behaviour lever to see its impact on your trajectory</div>}
         </div>
 
         <div className="health-panel">
-          <div className="health-panel-heading">⚡ Your Top Levers</div>
+          <div className="health-panel-heading">STGS Top Levers</div>
           <div className="lever-hint">Click to see how each change shifts your trajectory</div>
           {levers.length > 0 ? levers.map(lever => {
             const isActive = activeLever?.key === lever.key;
@@ -550,7 +550,7 @@ function TwinHealthPage({ answers, onReset, twinChat }) {
               </div>
             );
           }) : (
-            <div className="no-levers">🎉 Your lifestyle is already well-optimised! Explore the DNA Explorer for deeper genetic insights.</div>
+            <div className="no-levers">Your lifestyle is already well-optimised. Explore the DNA Explorer for deeper genetic insights.</div>
           )}
           <button className="reset-btn" onClick={onReset}>← Redo questionnaire</button>
         </div>
@@ -558,7 +558,7 @@ function TwinHealthPage({ answers, onReset, twinChat }) {
 
       {/* Twin chat */}
       <div className="health-panel health-chat-panel">
-        <div className="health-panel-heading">💬 Ask TWIN About Your Results</div>
+        <div className="health-panel-heading">Ask TWIN About Your Results</div>
         {twinChat}
       </div>
     </div>
@@ -605,7 +605,7 @@ function Message({ msg }) {
 /* ═══════════════════════════════════════════════════════════════ */
 /*  CHAT PANEL                                                     */
 /* ═══════════════════════════════════════════════════════════════ */
-function ChatPanel({ open, messages, loading, suggestions, onSend, onClear, floating, compact }) {
+function ChatPanel({ open, messages, loading, suggestions, onSend, onClear, onClose, floating, compact }) {
   const [input, setInput] = useState('');
   const endRef  = useRef(null);
   const textRef = useRef(null);
@@ -655,15 +655,20 @@ function ChatPanel({ open, messages, loading, suggestions, onSend, onClear, floa
         <div className="panel-header">
           <div>
             <div className="chat-title">Ask TWIN</div>
-            <div className="chat-subtitle">No science degree needed 😊</div>
+            <div className="chat-subtitle">No science degree needed</div>
           </div>
-          <button className="chat-hbtn" onClick={onClear} title="Clear chat">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polyline points="3 6 5 6 21 6"/>
-              <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
-              <path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
-            </svg>
-          </button>
+          <div className="chat-header-actions">
+            <button className="chat-hbtn" onClick={onClear} title="Clear chat">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                <path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+              </svg>
+            </button>
+            {onClose && (
+              <button className="chat-hbtn" onClick={onClose} title="Close chat">Close</button>
+            )}
+          </div>
         </div>
         <div className="messages-area">
           {messages.map(m => <Message key={m.id} msg={m}/>)}
@@ -740,7 +745,7 @@ function DNACanvas({ onTooltip }) {
           The whole shape = a double helix
         </div>
       </div>
-      <div className="center-hint">🖱 Drag to spin · Scroll to zoom · Hover a rung to see its letter pair</div>
+      <div className="center-hint">Drag to spin · Scroll to zoom · Hover a rung to see its letter pair</div>
     </div>
   );
 }
@@ -780,7 +785,7 @@ function VariantAnalyser({ analysis }) {
 
   return (
     <div className="panel-section">
-      <SectionHeader title="⚡ Evo2 Variant Analysis"
+      <SectionHeader title="STGS Evo2 Variant Analysis"
         info="<strong>What is this?</strong><br/>Calls the <em>real</em> Evo2 AI (trained on 8.8 trillion DNA letters) to score a single-letter change at any position. A negative Δ score means Evo2 thinks the mutation is unusual — potentially damaging."/>
 
       <div className="va-row">
@@ -808,7 +813,7 @@ function VariantAnalyser({ analysis }) {
       </div>
 
       <button className="seq-btn primary va-run-btn" onClick={handleRun} disabled={!alt || loading}>
-        {loading ? '⏳ Evo2 is thinking…' : '⚡ Run Evo2 Analysis'}
+        {loading ? 'Evo2 is thinking…' : 'Run Evo2 Analysis'}
       </button>
 
       {loading && (
@@ -843,7 +848,7 @@ function VariantAnalyser({ analysis }) {
             )}
           </div>
           <div className="va-interp-desc">{interp.desc}</div>
-          <div className="va-powered">⚡ Powered by real Evo2 AI · Arc Institute</div>
+          <div className="va-powered">Powered by real Evo2 AI · Arc Institute</div>
         </div>
       )}
     </div>
@@ -912,7 +917,7 @@ function LeftPanel({ open, seqInput, setSeqInput, analysis, onAnalyze, onClear, 
                     <span style={{ color: 'var(--text3)', fontSize: '10px' }}>{BASE_INFO[hoveredBase].why}</span>
                   </>
                 ) : (
-                  <span style={{ color: 'var(--text3)' }}>👆 Hover any letter tile above to learn what it does</span>
+                  <span style={{ color: 'var(--text3)' }}>Hover any letter tile above to learn what it does</span>
                 )}
               </div>
             </div>
@@ -939,7 +944,7 @@ function LeftPanel({ open, seqInput, setSeqInput, analysis, onAnalyze, onClear, 
               <div className="base-stats">
                 {['A', 'T', 'G', 'C'].map((b, i) => (
                   <div key={b} className="base-stat" title={BASE_INFO[b]?.why}>
-                    <span className="bs-label" style={{ color: `var(--${b})` }}>{b} {['🔵','🟡','🟢','🔴'][i]}</span>
+                    <span className="bs-label" style={{ color: `var(--${b})` }}>{b} {['STGS','STGS','STGS','STGS'][i]}</span>
                     <span className="bs-val">{analysis.counts[b]} ({Math.round(100 * analysis.counts[b] / analysis.seq.length)}%)</span>
                   </div>
                 ))}
@@ -955,8 +960,8 @@ function LeftPanel({ open, seqInput, setSeqInput, analysis, onAnalyze, onClear, 
             <SectionHeader title="Famous DNA Snippets"
               info="<strong>Why these?</strong><br/>Real, well-known pieces of human (and viral) DNA — each with a very different job. Click any card to load it and score it!"/>
             <div className="preset-list">
-              {[['BRCA1','🛡️ Cancer Shield Gene'],['TELO','⏳ Cell Aging Clock'],
-                ['KOZAK','🚀 Protein Launch Pad'],['PHIX','🦠 Tiny Virus DNA']].map(([key, label]) => (
+              {[['BRCA1','STGS Cancer Shield Gene'],['TELO','STGS Cell Aging Clock'],
+                ['KOZAK','STGS Protein Launch Pad'],['PHIX','STGS Tiny Virus DNA']].map(([key, label]) => (
                 <div key={key} className="preset" onClick={() => onPreset(key)}>
                   <div className="preset-name">{label}</div>
                   <div className="preset-desc">{PRESET_INFO[key].why}</div>
@@ -1010,7 +1015,7 @@ function ExplorerPage({ sharedState }) {
     addMsg('user', `Show me the ${PRESET_FRIENDLY[key]}`);
     const gc  = gcContent(seq);
     const tid = addMsg('ai', '', true);
-    const resp = `Loaded the **${PRESET_FRIENDLY[key]}**! 🧬\n\nThis ${seq.length}-letter DNA code is **${gc}% stable**.\n\nHover any letter to light up that rung on the 3D spiral!`;
+    const resp = `Loaded the **${PRESET_FRIENDLY[key]}**.\n\nThis ${seq.length}-letter DNA code is **${gc}% stable**.\n\nHover any letter to light up that rung on the 3D spiral.`;
     setTimeout(() => resolveTyping(tid, resp), 600);
     setSuggestions([]);
     setTimeout(() => setSuggestions(DEFAULT_SUGGESTIONS.slice(0, 3)), 1800);
@@ -1060,28 +1065,28 @@ function ExplorerPage({ sharedState }) {
 
 const BODY_REGIONS = [
   {
-    id: 'brain', label: 'Brain', emoji: '🧠',
+    id: 'brain', label: 'Brain', tag: 'STGS',
     top: '20%', left: '49.5%',
     tjtiobertiughiubvhergene: 'BRCA1', color: '#a855f7',
     info: 'Your brain cells contain the same DNA as every other cell. Genes like APOE influence Alzheimer\u2019s risk. TWIN scores brain-region genes to assess neural stability.',
     stat: 'Neural DNA stability is maintained by specialized repair enzymes active only in neurons.',
   },
   {
-    id: 'heart', label: 'Heart', emoji: '❤️',
+    id: 'heart', label: 'Heart', tag: 'STGS',
     top: '53%', left: '60%',
     gene: 'KOZAK', color: '#ef4444',
     info: 'The heart needs precise protein timing — the Kozak sequence (Protein Launch Pad) controls this. Mutations here can affect cardiac rhythm proteins.',
     stat: 'Cardiac genes are read ~2\u00d7 more frequently than average genes due to the heart\'s constant activity.',
   },
   {
-    id: 'dna-helix', label: 'DNA Core', emoji: '🧬',
+    id: 'dna-helix', label: 'DNA Core', tag: 'STGS',
     top: '72%', left: '51%',
     gene: 'TELO', color: '#00e5ff',
     info: 'Every cell in your body has ~2 metres of DNA coiled inside it. Telomeres at the tips protect it like the plastic end of a shoelace, getting shorter each time cells divide.',
     stat: 'You lose ~50\u2013200 telomere letters per cell division. Lifestyle factors can slow this loss.',
   },
   {
-    id: 'lungs', label: 'Lungs', emoji: '🫁',
+    id: 'lungs', label: 'Lungs', tag: 'STGS',
     top: '51%', left: '42%',
     gene: 'BRCA1', color: '#3b82f6',
     info: 'Lung cells are exposed to environmental DNA damage daily. The BRCA1 Cancer Shield Gene is especially active here, constantly repairing oxidative damage from breathing.',
@@ -1139,7 +1144,7 @@ function AvatarCanvas({ activeRegion, onRegionClick }) {
           onClick={() => onRegionClick(r.id)}
           title={r.label}>
           <span className="hotspot-pulse"/>
-          <span className="hotspot-emoji">{r.emoji}</span>
+          <span className="hotspot-emoji">{r.tag}</span>
         </button>
       ))}
     </div>
@@ -1165,7 +1170,7 @@ function StatRing({ label, value, max, color }) {
   );
 }
 
-function AvatarPage({ onBack, sharedState }) {
+function AvatarPage({ sharedState, twinAnswers, onOpenHealthResults }) {
   const { analysis, messages, chatLoading, suggestions, handleSend, handleClearChat } = sharedState;
   const [activeRegion, setActiveRegion] = useState('dna-helix');
   const [chatOpen, setChatOpen]         = useState(false);
@@ -1180,7 +1185,7 @@ function AvatarPage({ onBack, sharedState }) {
       <div className="avatar-body">
         <div className="avatar-hud-left">
           <div className="hud-panel">
-            <div className="hud-title">🔬 DNA Composition</div>
+            <div className="hud-title">STGS DNA Composition</div>
             <div className="stat-rings-row">
               <StatRing label="G+C"    value={gcPct}    max={100} color="var(--cyan)"/>
               <StatRing label="A+T"    value={atPct}    max={100} color="var(--amber)"/>
@@ -1189,14 +1194,14 @@ function AvatarPage({ onBack, sharedState }) {
           </div>
 
           <div className="hud-panel">
-            <div className="hud-title">📊 Base Counts</div>
+            <div className="hud-title">STGS Base Counts</div>
             {analysis ? (
               ['A','T','G','C'].map((b, i) => {
                 const pct = Math.round(100 * analysis.counts[b] / analysis.seq.length);
                 return (
                   <div key={b} className="hud-bar-row">
                     <span className="hud-bar-label" style={{ color: `var(--${b})` }}>
-                      {['🔵','🟡','🟢','🔴'][i]} {b}
+                      {['STGS','STGS','STGS','STGS'][i]} {b}
                     </span>
                     <div className="hud-bar-bg">
                       <div className="hud-bar-fill" style={{ width: pct + '%', background: `var(--${b})` }}/>
@@ -1213,7 +1218,7 @@ function AvatarPage({ onBack, sharedState }) {
           </div>
 
           <div className="hud-panel">
-            <div className="hud-title">🧬 Active Sequence</div>
+            <div className="hud-title">STGS Active Sequence</div>
             {analysis ? (
               <div className="hud-seq-preview">
                 {analysis.seq.slice(0, 40).split('').map((b, i) => (
@@ -1235,29 +1240,39 @@ function AvatarPage({ onBack, sharedState }) {
         <div className="avatar-hud-right">
           <div className="hud-panel region-info-card" style={{ borderColor: region.color }}>
             <div className="hud-title" style={{ color: region.color }}>
-              {region.emoji} {region.label}
+              {region.tag} {region.label}
             </div>
             <div style={{ fontSize: 12, color: 'var(--text2)', lineHeight: 1.6, marginTop: 8 }}>
               {region.info}
             </div>
             <div className="region-stat-box" style={{ borderColor: region.color + '44' }}>
-              <span style={{ fontSize: 10, color: 'var(--text3)' }}>📡 Did you know?</span><br/>
+              <span style={{ fontSize: 10, color: 'var(--text3)' }}>Did you know?</span><br/>
               <span style={{ fontSize: 11, color: 'var(--text2)', lineHeight: 1.5 }}>{region.stat}</span>
             </div>
             <button className="seq-btn primary" style={{ marginTop: 12, fontSize: 11 }}
               onClick={() => { window._twinAsk && window._twinAsk(`Tell me about the ${region.label} gene`); setChatOpen(true); }}>
-              💬 Ask TWIN about this
+              Ask TWIN about this
             </button>
           </div>
 
+          {twinAnswers && (
+            <div className="hud-panel">
+              <div className="hud-title">STGS Questionnaire Results</div>
+              <div style={{ fontSize: 11, color: 'var(--text2)', lineHeight: 1.6, marginBottom: 10 }}>
+                Your STGS health responses are ready. Open the results dashboard to review trajectory and levers.
+              </div>
+              <button className="seq-btn primary" onClick={onOpenHealthResults}>View Twin Health Results</button>
+            </div>
+          )}
+
           <div className="hud-panel">
-            <div className="hud-title">🗺 Body Region Map</div>
+            <div className="hud-title">STGS Body Region Map</div>
             {BODY_REGIONS.map(r => (
               <div key={r.id}
                 className={`region-legend-row ${activeRegion === r.id ? 'active' : ''}`}
                 style={{ '--rc': r.color }}
                 onClick={() => setActiveRegion(r.id)}>
-                <span>{r.emoji}</span>
+                <span>{r.tag}</span>
                 <span style={{ flex: 1 }}>{r.label}</span>
                 <span style={{ fontSize: 10, color: 'var(--text3)', fontFamily: 'JetBrains Mono, monospace' }}>{r.gene}</span>
               </div>
@@ -1265,21 +1280,22 @@ function AvatarPage({ onBack, sharedState }) {
           </div>
 
           <button className="avatar-chat-toggle" onClick={() => setChatOpen(o => !o)}>
-            {chatOpen ? '✕ Close Chat' : '💬 Ask TWIN'}
+            {chatOpen ? 'Close Chat' : 'Ask TWIN'}
           </button>
+
+          {chatOpen && (
+            <div className="avatar-chat-shell">
+              <ChatPanel
+                open={true}
+                messages={messages} loading={chatLoading}
+                suggestions={suggestions} onSend={handleSend}
+                onClear={handleClearChat}
+                onClose={() => setChatOpen(false)}
+              />
+            </div>
+          )}
         </div>
       </div>
-
-      {chatOpen && (
-        <div className="avatar-floating-chat">
-          <ChatPanel
-            open={true} floating={true}
-            messages={messages} loading={chatLoading}
-            suggestions={suggestions} onSend={handleSend}
-            onClear={handleClearChat}
-          />
-        </div>
-      )}
     </div>
   );
 }
@@ -1339,7 +1355,7 @@ export default function App() {
 
   const handleClearChat = useCallback(() => {
     setMessages([]);
-    addMsg('ai', 'Chat cleared! Ask me anything about DNA — no science knowledge needed 😊');
+    addMsg('ai', 'Chat cleared. Ask me anything about DNA — no science knowledge needed.');
     setSuggestions(DEFAULT_SUGGESTIONS);
   }, [addMsg]);
 
@@ -1355,16 +1371,16 @@ export default function App() {
     const top    = levers[0];
     let resp;
     if (lq.includes('score') || lq.includes('number') || lq.includes('mean')) {
-      resp = `Your health score of **${score}/100** reflects your current lifestyle balance.\n\n${score >= 75 ? '✅ This is a strong score!' : score >= 50 ? '⚠️ There\'s meaningful room for improvement.' : '🔴 There are significant lifestyle factors to address.'}\n\nThe score combines sleep quality, stress, physical activity, and nutrition — all levers you control.`;
+      resp = `Your health score of **${score}/100** reflects your current lifestyle balance.\n\n${score >= 75 ? 'This is a strong score.' : score >= 50 ? 'There is meaningful room for improvement.' : 'There are significant lifestyle factors to address.'}\n\nThe score combines sleep quality, stress, physical activity, and nutrition — all levers you control.`;
     } else if (lq.includes('sleep')) {
       const slp = parseFloat(twinAnswers.sleep);
       const gain = Math.round(projectTrajectory(twinAnswers, {key:'sleep',value:'8'})[5].score - projectTrajectory(twinAnswers)[5].score);
-      resp = `You're getting **${slp} hrs/night** — ${slp >= 7 ? 'within healthy range ✅' : 'below optimal ⚠️'}.\n\nOptimal sleep is **7–9 hours**. During sleep your body:\n- Consolidates memories and clears brain waste\n- Repairs DNA damage from the day\n- Resets cortisol and immune function\n\n${slp < 7 ? `Improving to 7+ hours could add **+${gain} points** to your 5-year projection.` : 'Keep up the great sleep habits!'}`;
+      resp = `You're getting **${slp} hrs/night** — ${slp >= 7 ? 'within healthy range' : 'below optimal'}.\n\nOptimal sleep is **7–9 hours**. During sleep your body:\n- Consolidates memories and clears brain waste\n- Repairs DNA damage from the day\n- Resets cortisol and immune function\n\n${slp < 7 ? `Improving to 7+ hours could add **+${gain} points** to your 5-year projection.` : 'Keep up the great sleep habits.'}`;
     } else if (lq.includes('stress')) {
-      resp = `You reported **${twinAnswers.stress} stress** — ${twinAnswers.stress === 'low' ? 'excellent! Low stress is strongly protective.' : twinAnswers.stress === 'medium' ? 'manageable, but watch for drift toward chronic stress.' : '⚠️ chronic high stress significantly accelerates biological aging.'}\n\nCortisol directly shortens telomeres (cellular aging caps) and suppresses immune function.\n\n${twinAnswers.stress !== 'low' ? 'Meditation, prioritising sleep, and regular exercise are the most evidence-backed stress reducers.' : ''}`;
+      resp = `You reported **${twinAnswers.stress} stress** — ${twinAnswers.stress === 'low' ? 'excellent. Low stress is strongly protective.' : twinAnswers.stress === 'medium' ? 'manageable, but watch for drift toward chronic stress.' : 'chronic high stress significantly accelerates biological aging.'}\n\nCortisol directly shortens telomeres (cellular aging caps) and suppresses immune function.\n\n${twinAnswers.stress !== 'low' ? 'Meditation, prioritising sleep, and regular exercise are the most evidence-backed stress reducers.' : ''}`;
     } else if (lq.includes('activ') || lq.includes('exercise')) {
       const gain = Math.round(projectTrajectory(twinAnswers, {key:'activity',value:'active'})[5].score - projectTrajectory(twinAnswers)[5].score);
-      resp = `Your activity level is **${twinAnswers.activity}**.\n\n${twinAnswers.activity === 'sedentary' || twinAnswers.activity === 'light' ? `⚠️ Activity is likely your highest-impact lever. Just 150 min/week of brisk walking:\n- Reduces all-cause mortality risk by ~30%\n- Improves telomere length\n- Boosts cellular repair enzymes\n\nImproving to "active" could add **+${gain} points** to your 5-year score.` : '💪 Your activity level is already providing real health benefits. Consistency is what matters most.'}`;
+      resp = `Your activity level is **${twinAnswers.activity}**.\n\n${twinAnswers.activity === 'sedentary' || twinAnswers.activity === 'light' ? `Activity is likely your highest-impact lever. Just 150 min/week of brisk walking:\n- Reduces all-cause mortality risk by ~30%\n- Improves telomere length\n- Boosts cellular repair enzymes\n\nImproving to "active" could add **+${gain} points** to your 5-year score.` : 'Your activity level is already providing real health benefits. Consistency is what matters most.'}`;
     } else if (lq.includes('risk') || lq.includes('biggest') || lq.includes('concern')) {
       const gain = top ? Math.round(projectTrajectory(twinAnswers, {key:top.key,value:top.improve.value})[5].score - projectTrajectory(twinAnswers)[5].score) : 0;
       resp = `Your biggest modifiable risk factor right now is **${top?.label || 'optimising your lifestyle'}**.\n\n${top?.desc || 'Your overall profile looks balanced.'}\n\n${top ? `Improving your ${top.label.toLowerCase()} could add an estimated **+${gain} points** to your 5-year score.` : ''}`;
@@ -1378,7 +1394,7 @@ export default function App() {
       const i5 = top ? Math.round(projectTrajectory(twinAnswers, {key:top.key,value:top.improve.value})[5].score) : null;
       resp = `Your **5-year baseline** puts you at **${b5}/100** without any changes.\n\n${i5 ? `But improving your **${top.label.toLowerCase()}** alone could bring that to **${i5}/100** — a +${i5-b5} point difference from a single behaviour change.\n\nThat's the power of compound lifestyle effects over time.` : 'Keep maintaining your healthy habits to stay on this trajectory!'}`;
     } else if (lq.includes('dna') || lq.includes('gene') || lq.includes('genetic')) {
-      resp = `Great question! Your lifestyle profile is one dimension of health. Genetics adds another.\n\nIn the **🔬 DNA Explorer** (header above), you can:\n- Paste a DNA sequence and see it as a live 3D helix\n- Analyse mutations with real Evo2 AI\n- Explore gene activity across body regions\n\nYour lifestyle score + genetic profile = the most complete picture.`;
+      resp = `Great question. Your lifestyle profile is one dimension of health. Genetics adds another.\n\nIn the **DNA Explorer** (header above), you can:\n- Paste a DNA sequence and see it as a live 3D helix\n- Analyse mutations with real Evo2 AI\n- Explore gene activity across body regions\n\nYour lifestyle score + genetic profile = the most complete picture.`;
     } else {
       resp = generateResponse(text);
     }
@@ -1402,13 +1418,13 @@ export default function App() {
   /* ── Questionnaire complete ── */
   const handleQComplete = useCallback((answers) => {
     setTwinAnswers(answers);
-    setPage('twin');
+    setPage('avatar');
     const score  = Math.round(computeCurrentScore(answers));
     const levers = getTopLevers(answers);
     const top    = levers[0];
     setTimeout(() => {
       addMsg('ai',
-        `💓 Your Twin Health profile is ready!\n\n**Health score: ${score}/100**\n\n${top ? `Your biggest opportunity: **${top.label}** — ${top.desc}` : 'Your lifestyle looks well-balanced!'}\n\nAsk me anything about your results, projections, or how to improve!`,
+        `Your Twin Health profile is ready.\n\n**Health score: ${score}/100**\n\n${top ? `Your biggest opportunity: **${top.label}** — ${top.desc}` : 'Your lifestyle looks well-balanced.'}\n\nAsk me anything about your results, projections, or how to improve.`,
         false, 'health'
       );
       setHealthSuggs(HEALTH_SUGGESTIONS);
@@ -1424,6 +1440,7 @@ export default function App() {
   useEffect(() => {
     window._twinAsk = (q) => {
       if (page === 'explorer') { if (!rightOpen) { setRightOpen(true); setLeftOpen(false); } handleSend(q); }
+      else if (page === 'avatar') handleSend(q);
       else if (page === 'twin') handleHealthSend(q);
     };
     return () => { window._twinAsk = null; };
@@ -1432,7 +1449,7 @@ export default function App() {
   /* Boot */
   useEffect(() => {
     setTimeout(() => setLoaded(true), 600);
-    addMsg('ai', `👋 Welcome to **TWIN** — your personal DNA explorer!\n\nNo science background needed.\n\n**Get started:**\n- 🌀 **Drag** the 3D spiral to spin it\n- 🔬 **Click a Famous Snippet** on the left\n- 🧑‍🔬 **Open Avatar Lab** to see DNA in your body\n- 💬 **Ask me anything** below!`);
+    addMsg('ai', `Welcome to **TWIN** — your personal DNA explorer.\n\nNo science background needed.\n\n**Get started:**\n- **Drag** the 3D spiral to spin it\n- **Click a Famous Snippet** on the left\n- **Open Avatar Lab** to see DNA in your body\n- **Ask me anything** below`);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1490,7 +1507,13 @@ export default function App() {
           />
         )}
         {page === 'explorer' && <ExplorerPage sharedState={sharedState}/>}
-        {page === 'avatar'   && <AvatarPage   onBack={() => navigate('explorer')} sharedState={sharedState}/>}
+        {page === 'avatar'   && (
+          <AvatarPage
+            sharedState={sharedState}
+            twinAnswers={twinAnswers}
+            onOpenHealthResults={() => setPage('twin')}
+          />
+        )}
       </div>
     </div>
   );
