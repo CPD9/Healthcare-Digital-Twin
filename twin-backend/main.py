@@ -1,4 +1,7 @@
+import json
+import os
 import sys
+from typing import Any
 
 import modal
 
@@ -10,25 +13,262 @@ class VariantRequest(BaseModel):
     genome: str
     chromosome: str
 
+
+class LifestyleProfile(BaseModel):
+    sleep_hours: float
+    stress_level: int
+    activity_minutes_per_week: int
+    nutrition_quality: int
+    smoking: bool
+
+
+class TwinProfileRequest(BaseModel):
+    name: str
+    age: int
+    lifestyle: LifestyleProfile
+    has_dna_data: bool = False
+    genome_assembly: str | None = None
+    dna_summary: str | None = None
+
+
+class SimulateTwinRequest(BaseModel):
+    profile: TwinProfileRequest
+    intervention_focus: str = "sleep"
+    intervention_delta: float = 1.0
+
+
+class TwinChatRequest(BaseModel):
+    message: str
+    profile: TwinProfileRequest
+    simulation: dict[str, Any]
+
+
+def _clamp(value: float, lower: float, upper: float) -> float:
+    return max(lower, min(upper, value))
+
+
+def _compute_risk_score(profile: TwinProfileRequest) -> float:
+    lifestyle = profile.lifestyle
+    score = 0.45
+
+    score += 0.05 * _clamp(7.0 - lifestyle.sleep_hours, 0.0, 5.0)
+    score += 0.05 * _clamp(lifestyle.stress_level - 3, 0.0, 7.0)
+    score += 0.05 * _clamp((150 - lifestyle.activity_minutes_per_week) / 50, 0.0, 3.0)
+    score += 0.05 * _clamp(3 - lifestyle.nutrition_quality, 0.0, 3.0)
+
+    if lifestyle.smoking:
+        score += 0.12
+
+    if profile.has_dna_data:
+        # Treat DNA-aware mode as higher personalization confidence.
+        score += 0.02
+
+    return _clamp(score, 0.05, 0.95)
+
+
+def _build_projection(risk_score: float, years: int) -> dict[str, float]:
+    return {
+        "years": years,
+        "risk_score": round(risk_score + (years * 0.01), 4),
+        "health_index": round((1 - risk_score) * 100 - years * 1.5, 2),
+    }
+
+
+def _run_twin_simulation(
+    profile: TwinProfileRequest,
+    intervention_focus: str,
+    intervention_delta: float,
+) -> dict[str, Any]:
+    baseline_risk = _compute_risk_score(profile)
+    improved_profile = profile.model_copy(deep=True)
+
+    if intervention_focus == "sleep":
+        improved_profile.lifestyle.sleep_hours = _clamp(
+            improved_profile.lifestyle.sleep_hours + intervention_delta,
+            4.0,
+            9.0,
+        )
+    elif intervention_focus == "activity":
+        improved_profile.lifestyle.activity_minutes_per_week = int(
+            _clamp(
+                improved_profile.lifestyle.activity_minutes_per_week + intervention_delta,
+                0.0,
+                600.0,
+            )
+        )
+    elif intervention_focus == "stress":
+        improved_profile.lifestyle.stress_level = int(
+            _clamp(
+                improved_profile.lifestyle.stress_level - intervention_delta,
+                1.0,
+                10.0,
+            )
+        )
+
+    improved_risk = _compute_risk_score(improved_profile)
+    confidence_tier = "enhanced" if profile.has_dna_data else "standard"
+
+    return {
+        "confidence_tier": confidence_tier,
+        "current_state_summary": {
+            "baseline_risk_score": round(baseline_risk, 4),
+            "primary_lever": intervention_focus,
+            "dna_mode": "provided" if profile.has_dna_data else "unknown",
+        },
+        "future_projection_baseline": [
+            _build_projection(baseline_risk, 1),
+            _build_projection(baseline_risk, 5),
+        ],
+        "future_projection_improved": [
+            _build_projection(improved_risk, 1),
+            _build_projection(improved_risk, 5),
+        ],
+        "delta": {
+            "risk_reduction": round(baseline_risk - improved_risk, 4),
+            "health_index_gain_5y": round((baseline_risk - improved_risk) * 100, 2),
+        },
+        "top_levers": [
+            "sleep_consistency",
+            "weekly_activity",
+            "stress_reduction",
+        ],
+    }
+
+
+def _classify_ui_intents(message: str) -> list[dict[str, str]]:
+    """Detect which UI panels the chat response should suggest opening."""
+    intents: list[dict[str, str]] = []
+    m = message.lower()
+    if any(k in m for k in ["compar", "variant", "dna", "gene", "brca", "tp53", "mutation", "cancer gene", "genome"]):
+        intents.append({"panel_type": "compare_variants"})
+    if any(k in m for k in ["lifestyle", "sleep more", "exercise", "activity", "stress", "what if i", "scenario"]):
+        intents.append({"panel_type": "lifestyle_what_if"})
+    if any(k in m for k in ["explore", "chromosome", "sequence", "region", "look at"]):
+        intents.append({"panel_type": "explore_dna_region"})
+    return intents
+
+
+def _call_chat_llm(request: TwinChatRequest) -> dict[str, object]:
+    import requests
+    import re
+
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        return {
+            "assistant_message": (
+                "Twin LLM is not configured yet. Add OPENAI_API_KEY in your backend "
+                "environment to enable live conversational responses."
+            ),
+            "action_suggestion": "Increase sleep by 45-60 minutes for the next 7 days.",
+            "expected_impact": "Small but measurable risk reduction in the 1-year projection.",
+            "uncertainty_note": "This is a directional estimate, not a diagnosis.",
+            "safety_note": "For medical decisions, speak with a qualified clinician.",
+            "ui_intents": _classify_ui_intents(request.message),
+        }
+
+    model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+    base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+    url = f"{base_url.rstrip('/')}/chat/completions"
+
+    system_prompt = (
+        "You are Twin, a preventive-health digital twin assistant. "
+        "Be concise, practical, and non-diagnostic. Use plain language for non-experts."
+    )
+    user_prompt = (
+        f"Profile: {request.profile.model_dump()}\n"
+        f"Simulation: {request.simulation}\n"
+        f"User message: {request.message}\n"
+        "Return JSON only with these keys:\n"
+        "- plain_explanation: one short paragraph in everyday language\n"
+        "- action_suggestion: one practical action for this week\n"
+        "- expected_impact: one sentence with expected trend change\n"
+        "- uncertainty_note: one sentence about uncertainty\n"
+        "- safety_note: one sentence that this is not medical diagnosis"
+    )
+
+    response = requests.post(
+        url,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        json={
+            "model": model,
+            "temperature": 0.3,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+        },
+        timeout=45,
+    )
+    response.raise_for_status()
+    content = response.json()["choices"][0]["message"]["content"]
+
+    parsed: dict[str, str] = {}
+    try:
+        parsed = json.loads(content)
+    except json.JSONDecodeError:
+        json_match = re.search(r"\{.*\}", content, flags=re.DOTALL)
+        if json_match:
+            try:
+                parsed = json.loads(json_match.group(0))
+            except json.JSONDecodeError:
+                parsed = {}
+
+    return {
+        "assistant_message": str(parsed.get("plain_explanation", content)).strip(),
+        "action_suggestion": str(
+            parsed.get(
+                "action_suggestion",
+                "Use one manageable behavior change this week and track consistency.",
+            )
+        ).strip(),
+        "expected_impact": str(
+            parsed.get(
+                "expected_impact",
+                "Steady progress can improve your future health trend over time.",
+            )
+        ).strip(),
+        "uncertainty_note": str(
+            parsed.get(
+                "uncertainty_note",
+                "This is a probability-based estimate and may change with more data.",
+            )
+        ).strip(),
+        "safety_note": str(
+            parsed.get(
+                "safety_note",
+                "This tool is educational and does not replace professional medical advice.",
+            )
+        ).strip(),
+        "ui_intents": _classify_ui_intents(request.message),
+    }
+
 evo2_image = (
     modal.Image.from_registry(
-        "nvidia/cuda:13.0.0-devel-ubuntu22.04", add_python="3.12"
+        "nvidia/cuda:12.4.1-devel-ubuntu22.04", add_python="3.12"
     )
     .apt_install(
-        ["build-essential", "cmake", "ninja-build",
-            "libcudnn8", "libcudnn8-dev", "git", "gcc", "g++"]
+        [
+            "build-essential",
+            "cmake",
+            "ninja-build",
+            "git",
+            "gcc",
+            "g++",
+            "libcudnn9-dev-cuda-12",
+        ]
     )
     .env({
-        "CC": "/usr/bin/gcc",
         "CXX": "/usr/bin/g++",
-        # Restrict arch targets to modern GPUs supported by this toolchain.
-        "TORCH_CUDA_ARCH_LIST": "8.0;8.9;9.0",
-        "NVTE_CUDA_ARCHS": "80;89;90",
     })
-    .run_commands("git clone --recurse-submodules https://github.com/ArcInstitute/evo2.git && cd evo2 && pip install .")
-    .run_commands("pip uninstall -y transformer-engine transformer_engine")
-    .run_commands("pip install -U pip setuptools wheel")
-    .run_commands("pip install 'transformer_engine[pytorch]==1.13' --no-build-isolation")
+    .run_commands("pip install wheel")
+    .run_commands("pip install torch --index-url https://download.pytorch.org/whl/cu124")
+    .run_commands("pip install 'transformer-engine[pytorch]==2.6.0.post1'")
+    .run_commands("pip install packaging")
+    .run_commands("git clone --recurse-submodules https://github.com/ArcInstitute/evo2.git && cd evo2 && pip install -e .")
+    .run_commands("pip install 'flash-attn==2.7.4.post1' --no-build-isolation")
     .pip_install_from_requirements("requirements.txt")
 )
 
@@ -284,7 +524,8 @@ def analyze_variant(relative_pos_in_window, reference, alternative, window_seq, 
         "alternative": alternative,
         "delta_score": float(delta_score),
         "prediction": prediction,
-        "classification_confidence": float(confidence)
+        "classification_confidence": float(confidence),
+        "model_backend": "evo2",
     }
 
 
@@ -294,7 +535,9 @@ class Evo2Model:
     def load_evo2_model(self):
         from evo2 import Evo2
         print("Loading evo2 model...")
-        self.model = Evo2('evo2_7b')
+        # Use the 8k-base checkpoint to avoid FP8-only input projections
+        # while preserving true Evo2 inference for the 8192 window workflow.
+        self.model = Evo2('evo2_7b_base')
         print("Evo2 model loaded")
 
     # @modal.method()
@@ -343,6 +586,27 @@ class Evo2Model:
         result["position"] = variant_position
 
         return result
+
+
+@app.cls(secrets=[modal.Secret.from_name("twin-openai")])
+class TwinService:
+    @modal.fastapi_endpoint(method="POST")
+    def profile(self, request: TwinProfileRequest):
+        profile = request.model_dump()
+        profile["mode"] = "genome-enhanced" if request.has_dna_data else "lifestyle-only"
+        return profile
+
+    @modal.fastapi_endpoint(method="POST")
+    def simulate(self, request: SimulateTwinRequest):
+        return _run_twin_simulation(
+            request.profile,
+            request.intervention_focus,
+            request.intervention_delta,
+        )
+
+    @modal.fastapi_endpoint(method="POST")
+    def chat(self, request: TwinChatRequest):
+        return _call_chat_llm(request)
 
 
 @app.local_entrypoint()

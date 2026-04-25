@@ -3,8 +3,15 @@ import { Button } from "./ui/button";
 import { Check, ExternalLink, Shield, X } from "lucide-react";
 import {
   getClassificationColorClasses,
+  getRiskToneBarClass,
   getNucleotideColorClass,
 } from "~/utils/coloring-utils";
+import {
+  TERM_LABELS,
+  explainDeltaScore,
+  toNaturalFrequency,
+  toPlainRiskLabel,
+} from "~/utils/plain-language";
 
 export function VariantComparisonModal({
   comparisonVariant,
@@ -22,7 +29,7 @@ export function VariantComparisonModal({
         <div className="border-b border-[#3c4f3d]/10 p-5">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-medium text-[#3c4f3d]">
-              Variant Analysis Comparison
+              DNA change comparison
             </h3>
             <Button
               variant="ghost"
@@ -41,14 +48,14 @@ export function VariantComparisonModal({
             <div className="space-y-6">
               <div className="rounded-md border border-[#3c4f3d]/10 bg-[#e9eeea]/30 p-4">
                 <h4 className="mb-3 text-sm font-medium text-[#3c4f3d]">
-                  Variant Information
+                  DNA change details
                 </h4>
                 <div className="grid gap-4 md:grid-cols-2">
                   <div>
                     <div className="space-y-2">
                       <div className="flex">
                         <span className="w-28 text-xs text-[#3c4f3d]/70">
-                          Position:
+                          DNA position:
                         </span>
                         <span className="text-xs">
                           {comparisonVariant.location}
@@ -56,7 +63,7 @@ export function VariantComparisonModal({
                       </div>
                       <div className="flex">
                         <span className="w-28 text-xs text-[#3c4f3d]/70">
-                          Type:
+                          Change type:
                         </span>
                         <span className="text-xs">
                           {comparisonVariant.variation_type}
@@ -69,7 +76,7 @@ export function VariantComparisonModal({
                     <div className="space-y-2">
                       <div className="flex">
                         <span className="w-28 text-xs text-[#3c4f3d]/70">
-                          Variant:
+                          DNA letters:
                         </span>
                         <span className="font-mono text-xs">
                           {(() => {
@@ -118,7 +125,7 @@ export function VariantComparisonModal({
               {/* Variant results */}
               <div>
                 <h4 className="mb-3 text-sm font-medium text-[#3c4f3d]">
-                  Analysis Comparison
+                  What each source says
                 </h4>
                 <div className="rounded-md border border-[#3c4f3d]/10 bg-white p-4">
                   <div className="grid gap-4 md:grid-cols-2">
@@ -137,6 +144,9 @@ export function VariantComparisonModal({
                           {comparisonVariant.classification ||
                             "Unknown significance"}
                         </div>
+                        <p className="mt-2 text-xs text-[#3c4f3d]/70">
+                          {toPlainRiskLabel(comparisonVariant.classification)}
+                        </p>
                       </div>
                     </div>
 
@@ -155,29 +165,32 @@ export function VariantComparisonModal({
                           <Shield className="h-3 w-3" />
                           {comparisonVariant.evo2Result.prediction}
                         </div>
+                        <p className="mt-2 text-xs text-[#3c4f3d]/70">
+                          {toPlainRiskLabel(comparisonVariant.evo2Result.prediction)}
+                        </p>
                       </div>
                       {/* Delta score */}
                       <div className="mt-3">
                         <div className="mb-1 text-xs text-[#3c4f3d]/70">
-                          Delta Likelihood Score:
+                          {TERM_LABELS.deltaScore.title}:
                         </div>
                         <div className="text-sm font-medium">
                           {comparisonVariant.evo2Result.delta_score.toFixed(6)}
                         </div>
                         <div className="text-xs text-[#3c4f3d]/60">
-                          {comparisonVariant.evo2Result.delta_score < 0
-                            ? "Negative score indicates loss of function"
-                            : "Positive score indicated gain/neutral function"}
+                          {explainDeltaScore(
+                            comparisonVariant.evo2Result.delta_score,
+                          )}
                         </div>
                       </div>
                       {/* Confidence bar */}
                       <div className="mt-3">
                         <div className="mb-1 text-xs text-[#3c4f3d]/70">
-                          Confidence:
+                          {TERM_LABELS.confidence.title}:
                         </div>
                         <div className="mt-1 h-2 w-full rounded-full bg-[#e9eeea]/80">
                           <div
-                            className={`h-2 rounded-full ${comparisonVariant.evo2Result.prediction.includes("pathogenic") ? "bg-red-600" : "bg-green-600"}`}
+                            className={`h-2 rounded-full ${getRiskToneBarClass(comparisonVariant.evo2Result.prediction)}`}
                             style={{
                               width: `${Math.min(100, comparisonVariant.evo2Result.classification_confidence * 100)}%`,
                             }}
@@ -190,6 +203,14 @@ export function VariantComparisonModal({
                           )}
                           %
                         </div>
+                        <p className="text-xs text-[#3c4f3d]/60">
+                          About{" "}
+                          {toNaturalFrequency(
+                            comparisonVariant.evo2Result.classification_confidence *
+                              100,
+                          )}{" "}
+                          similar predictions.
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -212,10 +233,18 @@ export function VariantComparisonModal({
                       <span className="font-medium text-[#3c4f3d]">
                         {comparisonVariant.classification.toLowerCase() ===
                         comparisonVariant.evo2Result.prediction.toLowerCase()
-                          ? "Evo2 prediction agrees with ClinVar classification"
-                          : "Evo2 prediction differs from ClinVar classification"}
+                          ? "Both sources point in the same direction."
+                          : "The two sources disagree. Treat this as uncertain."}
                       </span>
                     </div>
+                    <details className="mt-2">
+                      <summary className="cursor-pointer text-[11px] text-[#3c4f3d]/70">
+                        Scientific details
+                      </summary>
+                      <p className="mt-1 text-[11px] text-[#3c4f3d]/60">
+                        {TERM_LABELS.variant.subtitle}. {TERM_LABELS.deltaScore.subtitle}.
+                      </p>
+                    </details>
                   </div>
                 </div>
               </div>
