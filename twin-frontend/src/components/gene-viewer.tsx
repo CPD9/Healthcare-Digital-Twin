@@ -4,10 +4,13 @@ import {
   fetchGeneDetails,
   fetchGeneSequence as apiFetchGeneSequence,
   fetchClinvarVariants as apiFetchClinvarVariants,
+  chatWithTwin,
   type GeneBounds,
   type GeneDetailsFromSearch,
   type GeneFromSearch,
   type ClinvarVariant,
+  type TwinProfileRequest,
+  type TwinSimulationResponse,
 } from "~/utils/genome-api";
 import { Button } from "./ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -19,20 +22,60 @@ import { VariantComparisonModal } from "./variant-comparison-modal";
 import VariantAnalysis, {
   type VariantAnalysisHandle,
 } from "./variant-analysis";
+import {
+  ChatRail,
+  PANEL_CHIP_LABELS,
+  type ChatMessage,
+  type PanelKind,
+} from "./chat-rail";
+import {
+  DynamicInsightPanels,
+  type ActivePanel,
+} from "./dynamic-insight-panels";
+
+// Minimal fallbacks when the user hasn't completed the intake form yet
+const MINIMAL_PROFILE: TwinProfileRequest = {
+  name: "Explorer",
+  age: 30,
+  lifestyle: {
+    sleep_hours: 7,
+    stress_level: 5,
+    activity_minutes_per_week: 150,
+    nutrition_quality: 3,
+    smoking: false,
+  },
+  has_dna_data: true,
+};
+
+const MINIMAL_SIMULATION: TwinSimulationResponse = {
+  confidence_tier: "standard",
+  current_state_summary: {
+    baseline_risk_score: 0.5,
+    primary_lever: "lifestyle",
+    dna_mode: "unknown",
+  },
+  future_projection_baseline: [],
+  future_projection_improved: [],
+  delta: { risk_reduction: 0.05, health_index_gain_5y: 3 },
+  top_levers: ["sleep", "activity"],
+};
 
 export default function GeneViewer({
   gene,
   genomeId,
   onClose,
+  twinProfile,
+  simulationResult,
 }: {
   gene: GeneFromSearch;
   genomeId: string;
   onClose: () => void;
+  twinProfile?: TwinProfileRequest;
+  simulationResult?: TwinSimulationResponse;
 }) {
+  // ── Gene data state ───────────────────────────────────────────────────────
   const [geneSequence, setGeneSequence] = useState("");
-  const [geneDetail, setGeneDetail] = useState<GeneDetailsFromSearch | null>(
-    null,
-  );
+  const [geneDetail, setGeneDetail] = useState<GeneDetailsFromSearch | null>(null);
   const [geneBounds, setGeneBounds] = useState<GeneBounds | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +105,34 @@ export default function GeneViewer({
 
   const variantAnalysisRef = useRef<VariantAnalysisHandle>(null);
 
+  // ── Chat state ────────────────────────────────────────────────────────────
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    {
+      role: "assistant",
+      content: `I'm looking at ${gene.symbol} with you. Ask me anything about this gene, its variants, or what they might mean for your health.`,
+    },
+  ]);
+  const [chatInput, setChatInput] = useState("");
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const [chatError, setChatError] = useState<string | null>(null);
+
+  // ── Dynamic panel state ───────────────────────────────────────────────────
+  const [activePanels, setActivePanels] = useState<ActivePanel[]>([]);
+
+  const addPanel = (kind: PanelKind) => {
+    setActivePanels((prev) => {
+      if (prev.some((p) => p.kind === kind)) return prev;
+      return [...prev, { id: `${kind}-${Date.now()}`, kind }];
+    });
+    setTimeout(() => {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    }, 100);
+  };
+
+  const removePanel = (id: string) =>
+    setActivePanels((prev) => prev.filter((p) => p.id !== id));
+
+  // ── Gene data fetching ────────────────────────────────────────────────────
   const updateClinvarVariant = (
     clinvar_id: string,
     updateVariant: ClinvarVariant,
@@ -78,20 +149,15 @@ export default function GeneViewer({
       try {
         setIsLoadingSequence(true);
         setError(null);
-
         const {
           sequence,
           actualRange: fetchedRange,
           error: apiError,
         } = await apiFetchGeneSequence(gene.chrom, start, end, genomeId);
-
         setGeneSequence(sequence);
         setActualRange(fetchedRange);
-
-        if (apiError) {
-          setError(apiError);
-        }
-      } catch (err) {
+        if (apiError) setError(apiError);
+      } catch {
         setError("Failed to load sequence data");
       } finally {
         setIsLoadingSequence(false);
@@ -103,36 +169,33 @@ export default function GeneViewer({
   useEffect(() => {
     const initializeGeneData = async () => {
       setIsLoading(true);
-
       if (!gene.gene_id) {
         setError("Gene ID is missing, cannot fetch details");
         setIsLoading(false);
         return;
       }
-
       try {
         const {
           geneDetails: fetchedDetail,
           geneBounds: fetchedGeneBounds,
           initialRange: fetchedRange,
         } = await fetchGeneDetails(gene.gene_id);
-
         setGeneDetail(fetchedDetail);
         setGeneBounds(fetchedGeneBounds);
-
         if (fetchedRange) {
           setStartPosition(String(fetchedRange.start));
           setEndPosition(String(fetchedRange.end));
           await fetchGeneSequence(fetchedRange.start, fetchedRange.end);
         }
       } catch {
-        setError("Faield to load gene information. Please try again.");
+        setError("Failed to load gene information. Please try again.");
       } finally {
         setIsLoading(false);
       }
     };
-
-    initializeGeneData();
+    void initializeGeneData();
+  // fetchGeneSequence is stable (wrapped in useCallback); gene and genomeId are the real deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gene, genomeId]);
 
   const handleSequenceClick = useCallback(
@@ -151,7 +214,6 @@ export default function GeneViewer({
     const start = parseInt(startPosition);
     const end = parseInt(endPosition);
     let validationError: string | null = null;
-
     if (isNaN(start) || isNaN(end)) {
       validationError = "Please enter valid start and end positions";
     } else if (start >= end) {
@@ -164,27 +226,22 @@ export default function GeneViewer({
       } else if (end > maxBound) {
         validationError = `End position (${end.toLocaleString()}) exceeds the maximum value (${maxBound.toLocaleString()})`;
       }
-
       if (end - start > 10000) {
-        validationError = `Selected range exceeds maximum view range of 10.000 bp.`;
+        validationError = `Selected range exceeds maximum view range of 10,000 bp.`;
       }
     }
-
     if (validationError) {
       setError(validationError);
       return;
     }
-
     setError(null);
-    fetchGeneSequence(start, end);
+    void fetchGeneSequence(start, end);
   }, [startPosition, endPosition, fetchGeneSequence, geneBounds]);
 
   const fetchClinvarVariants = async () => {
     if (!gene.chrom || !geneBounds) return;
-
     setIsLoadingClinvar(true);
     setClinvarError(null);
-
     try {
       const variants = await apiFetchClinvarVariants(
         gene.chrom,
@@ -192,8 +249,7 @@ export default function GeneViewer({
         genomeId,
       );
       setClinvarVariants(variants);
-      console.log(variants);
-    } catch (error) {
+    } catch {
       setClinvarError("Failed to fetch ClinVar variants");
       setClinvarVariants([]);
     } finally {
@@ -203,26 +259,95 @@ export default function GeneViewer({
 
   useEffect(() => {
     if (geneBounds) {
+      // fetchClinvarVariants closes over geneBounds; re-runs only when bounds change
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       fetchClinvarVariants();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [geneBounds]);
 
   const showComparison = (variant: ClinvarVariant) => {
-    if (variant.evo2Result) {
-      setComparisonVariant(variant);
+    if (variant.evo2Result) setComparisonVariant(variant);
+  };
+
+  // ── Gene-aware chat ───────────────────────────────────────────────────────
+  const handleGeneChat = async () => {
+    if (!chatInput.trim()) return;
+    const userMessage = chatInput.trim();
+    setChatInput("");
+    setChatError(null);
+    setChatMessages((prev) => [...prev, { role: "user", content: userMessage }]);
+
+    try {
+      setIsChatLoading(true);
+
+      // Build a rich context prefix so the LLM understands what's on screen
+      const variantSummary =
+        clinvarVariants.length > 0
+          ? `${clinvarVariants.length} ClinVar variant(s) loaded, including: ${clinvarVariants
+              .slice(0, 3)
+              .map((v) => `${v.title} (${v.classification || "unknown"})`)
+              .join("; ")}.`
+          : "No ClinVar variants have loaded yet.";
+
+      const contextualMessage =
+        `[Gene context: ${gene.symbol} — ${gene.name}, ` +
+        `chromosome ${gene.chrom}, genome ${genomeId}. ${variantSummary}] ` +
+        userMessage;
+
+      const profile = twinProfile ?? {
+        ...MINIMAL_PROFILE,
+        genome_assembly: genomeId,
+      };
+      const simulation = simulationResult ?? MINIMAL_SIMULATION;
+
+      const response = await chatWithTwin({
+        message: contextualMessage,
+        profile,
+        simulation,
+      });
+
+      const panelTriggers = (response.ui_intents ?? []).map((intent) => ({
+        kind: intent.panel_type as PanelKind,
+        label:
+          PANEL_CHIP_LABELS[intent.panel_type as PanelKind] ??
+          intent.panel_type,
+      }));
+
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: response.assistant_message,
+          actionSuggestion: response.action_suggestion,
+          expectedImpact: response.expected_impact,
+          uncertaintyNote: response.uncertainty_note,
+          safetyNote: response.safety_note,
+          panelTriggers: panelTriggers.length > 0 ? panelTriggers : undefined,
+        },
+      ]);
+    } catch (err) {
+      setChatError(
+        err instanceof Error ? err.message : "Failed to send message.",
+      );
+    } finally {
+      setIsChatLoading(false);
     }
   };
 
+  // ── Loading state ─────────────────────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-800"></div>
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-800" />
       </div>
     );
   }
 
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
+      {/* Back button — full width */}
       <Button
         variant="ghost"
         size="sm"
@@ -233,50 +358,79 @@ export default function GeneViewer({
         Back to results
       </Button>
 
-      <VariantAnalysis
-        ref={variantAnalysisRef}
-        gene={gene}
+      {/* ── Split layout: left DNA content | right chat ─────────────────── */}
+      <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
+        {/* LEFT: all gene analysis cards */}
+        <div className="min-w-0 flex-1 space-y-6">
+          <VariantAnalysis
+            ref={variantAnalysisRef}
+            gene={gene}
+            genomeId={genomeId}
+            chromosome={gene.chrom}
+            clinvarVariants={clinvarVariants}
+            referenceSequence={activeReferenceNucleotide}
+            sequencePosition={activeSequencePosition}
+            geneBounds={geneBounds}
+          />
+
+          <KnownVariants
+            refreshVariants={fetchClinvarVariants}
+            showComparison={showComparison}
+            updateClinvarVariant={updateClinvarVariant}
+            clinvarVariants={clinvarVariants}
+            isLoadingClinvar={isLoadingClinvar}
+            clinvarError={clinvarError}
+            genomeId={genomeId}
+            gene={gene}
+          />
+
+          <GeneSequence
+            geneBounds={geneBounds}
+            geneDetail={geneDetail}
+            startPosition={startPosition}
+            endPosition={endPosition}
+            onStartPositionChange={setStartPosition}
+            onEndPositionChange={setEndPosition}
+            sequenceData={geneSequence}
+            sequenceRange={actualRange}
+            isLoading={isLoadingSequence}
+            error={error}
+            onSequenceLoadRequest={handleLoadSequence}
+            onSequenceClick={handleSequenceClick}
+            maxViewRange={10000}
+          />
+
+          <GeneInformation
+            gene={gene}
+            geneDetail={geneDetail}
+            geneBounds={geneBounds}
+          />
+        </div>
+
+        {/* RIGHT: sticky gene-aware chat rail */}
+        <div className="xl:sticky xl:top-6 xl:h-[calc(100vh-5rem)] xl:w-[420px] xl:shrink-0">
+          <ChatRail
+            profileName={twinProfile?.name ?? gene.symbol}
+            messages={chatMessages}
+            isLoading={isChatLoading}
+            input={chatInput}
+            error={chatError}
+            disabled={isChatLoading}
+            onInputChange={setChatInput}
+            onSend={() => void handleGeneChat()}
+            onAddPanel={addPanel}
+          />
+        </div>
+      </div>
+
+      {/* ── Dynamic panels injected below split ─────────────────────────── */}
+      <DynamicInsightPanels
+        panels={activePanels}
         genomeId={genomeId}
-        chromosome={gene.chrom}
-        clinvarVariants={clinvarVariants}
-        referenceSequence={activeReferenceNucleotide}
-        sequencePosition={activeSequencePosition}
-        geneBounds={geneBounds}
+        onRemovePanel={removePanel}
       />
 
-      <KnownVariants
-        refreshVariants={fetchClinvarVariants}
-        showComparison={showComparison}
-        updateClinvarVariant={updateClinvarVariant}
-        clinvarVariants={clinvarVariants}
-        isLoadingClinvar={isLoadingClinvar}
-        clinvarError={clinvarError}
-        genomeId={genomeId}
-        gene={gene}
-      />
-
-      <GeneSequence
-        geneBounds={geneBounds}
-        geneDetail={geneDetail}
-        startPosition={startPosition}
-        endPosition={endPosition}
-        onStartPositionChange={setStartPosition}
-        onEndPositionChange={setEndPosition}
-        sequenceData={geneSequence}
-        sequenceRange={actualRange}
-        isLoading={isLoadingSequence}
-        error={error}
-        onSequenceLoadRequest={handleLoadSequence}
-        onSequenceClick={handleSequenceClick}
-        maxViewRange={10000}
-      />
-
-      <GeneInformation
-        gene={gene}
-        geneDetail={geneDetail}
-        geneBounds={geneBounds}
-      />
-
+      {/* Comparison modal — unchanged */}
       <VariantComparisonModal
         comparisonVariant={comparisonVariant}
         onClose={() => setComparisonVariant(null)}

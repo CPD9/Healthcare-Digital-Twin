@@ -25,3 +25,10 @@ export function getClassificationColorClasses(classification: string): string {
     return "bg-yellow-100 text-yellow-800";
   }
 }
+
+export function getRiskToneBarClass(classification: string): string {
+  const lowercaseClass = classification.toLowerCase();
+  if (lowercaseClass.includes("pathogenic")) return "bg-red-600";
+  if (lowercaseClass.includes("benign")) return "bg-green-600";
+  return "bg-yellow-500";
+}

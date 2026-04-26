@@ -1,29 +1,50 @@
-# Create T3 App
+# Twin Frontend (Hackathon Build)
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+Plain-language web app for the Digital Future Health Twin demo.
 
-## What's next? How do I make an app with this?
+## What this frontend does
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+- Collects user lifestyle and optional DNA context.
+- Shows future health trend summaries in non-technical language.
+- Lets users explore ClinVar variants and run Evo2 comparison.
+- Adds a 3D visual twin section (with fallback visuals if model files are missing).
+- Supports chat responses with action suggestion, expected impact, and safety framing.
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## Local development
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Drizzle](https://orm.drizzle.team)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+```bash
+cd twin-frontend
+npm install
+npm run dev
+```
 
-## Learn More
+Open `http://localhost:3000`.
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
+## Environment variables
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+Create `twin-frontend/.env` with:
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+- `NEXT_PUBLIC_ANALYZE_SINGLE_VARIANT_BASE_URL`
+- `NEXT_PUBLIC_TWIN_PROFILE_BASE_URL`
+- `NEXT_PUBLIC_TWIN_SIMULATE_BASE_URL`
+- `NEXT_PUBLIC_TWIN_CHAT_BASE_URL`
 
-## How do I deploy this?
+These should point to deployed Modal endpoints from `twin-backend`.
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+## Optional 3D model assets
+
+To use custom GLB models, add:
+
+- `public/models/dna-helix.glb`
+- `public/models/human-body.glb`
+
+If absent, fallback 3D shapes are shown automatically.
+
+## Demo flow (quick script)
+
+1. Create twin baseline (name + lifestyle).
+2. Show future trend summary and what-if update.
+3. Open DNA variant table with relationships and concise definitions.
+4. Run Evo2 on a variant and compare with ClinVar.
+5. Ask chat: "What should I do this week?"
+6. Export the variant table view as PDF.

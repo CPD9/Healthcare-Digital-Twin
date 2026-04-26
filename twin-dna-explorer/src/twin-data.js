@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * twin-data.js — Knowledge base, DNA presets, base info, and utility helpers for TWIN
  * ES module version for Vite.
@@ -5,15 +6,15 @@
 
 /* ── Knowledge base ──────────────────────────────────────────── */
 export const KB = {
-  twin: `**TWIN** is your personal DNA explorer, powered by Evo2 — an AI trained on **8.8 trillion DNA letters** from almost every living thing on Earth.\n\nThink of it like ChatGPT, but instead of learning language it learned DNA. So TWIN can tell you how "normal" or "healthy" any DNA code looks.\n\n**Try it:**\n- 🌀 Spin the 3D spiral with your mouse\n- 🔬 Load a **Famous DNA Snippet** on the left\n- 💬 Ask me anything below — plain English, no science needed!`,
+  twin: `**TWIN** is your personal DNA explorer, powered by Evo2 — an AI trained on **8.8 trillion DNA letters** from almost every living thing on Earth.\n\nThink of it like ChatGPT, but instead of learning language it learned DNA. So TWIN can tell you how "normal" or "healthy" any DNA code looks.\n\n**Get started:**\n- Spin the 3D spiral with your mouse\n- Load a **Famous DNA Snippet** on the left\n- Ask me anything below — plain English, no science needed!`,
 
-  letters: `DNA is written with just **4 letters**: A, T, G, and C. That's it — every instruction your body needs is spelled out with those 4 letters.\n\n- 🔵 **A** — always locks with T (they fit together like puzzle pieces)\n- 🟡 **T** — always locks with A\n- 🟢 **G** — always locks with C\n- 🔴 **C** — always locks with G\n\nThe two sides of the DNA ladder zip together because of this pairing — A fits T, G fits C. That's what makes the twisted ladder shape you see in the 3D model!`,
+  letters: `DNA is written with just **4 letters**: A, T, G, and C. That's it — every instruction your body needs is spelled out with those 4 letters.\n\n- **A** — always locks with T (they fit together like puzzle pieces)\n- **T** — always locks with A\n- **G** — always locks with C\n- **C** — always locks with G\n\nThe two sides of the DNA ladder zip together because of this pairing — A fits T, G fits C. That's what makes the twisted ladder shape you see in the 3D model!`,
 
-  score: `The **DNA Health Score** is how "natural" your DNA code looks to TWIN.\n\nImagine reading a sentence: "The cat sat on the mat" sounds natural. "ZZZZ blorb flonk" sounds made up. TWIN reads DNA the same way:\n\n- ✅ **Excellent** → looks like real, healthy DNA\n- ✅ **Good** → normal and natural\n- ⚠️ **Average** → a bit unusual, but could be real\n- ⚠️ **Low** → might be synthetic or very rare\n\nHuman genes usually score in the Good–Excellent range.`,
+  score: `The **DNA Health Score** is how "natural" your DNA code looks to TWIN.\n\nImagine reading a sentence: "The cat sat on the mat" sounds natural. "ZZZZ blorb flonk" sounds made up. TWIN reads DNA the same way:\n\n- **Excellent** — looks like real, healthy DNA\n- **Good** — normal and natural\n- **Average** — a bit unusual, but could be real\n- **Low** — might be synthetic or very rare\n\nHuman genes usually score in the Good–Excellent range.`,
 
-  brca1: `The **Cancer Shield Gene** (scientists call it BRCA1) acts like a repair crew for your DNA.\n\nEvery day, small "typos" happen in your DNA. BRCA1's job is to find and fix those typos before they cause problems like cancer.\n\n- ✅ Working BRCA1 → finds and repairs damage\n- ❌ Broken BRCA1 → damage builds up → higher cancer risk\n\nThat's why some people get BRCA1 tested — knowing early helps doctors act fast. TWIN can score a BRCA1 snippet to show you what healthy DNA looks like!`,
+  brca1: `The **Cancer Shield Gene** (scientists call it BRCA1) acts like a repair crew for your DNA.\n\nEvery day, small "typos" happen in your DNA. BRCA1's job is to find and fix those typos before they cause problems like cancer.\n\n- Working BRCA1 — finds and repairs damage\n- Broken BRCA1 — damage builds up, raising cancer risk\n\nThat's why some people get BRCA1 tested — knowing early helps doctors act fast. TWIN can score a BRCA1 snippet to show you what healthy DNA looks like!`,
 
-  spiral: `DNA looks like a **twisted ladder** — scientists call it a double helix.\n\nHere's the simple version:\n- The **two side rails** of the ladder = the DNA spine\n- The **rungs** = pairs of letters (A–T or G–C)\n\nNow twist that ladder — that's DNA! The twist makes it incredibly compact. If you stretched out all the DNA in just ONE of your cells, it would be **2 metres long** — yet it fits inside something smaller than a grain of sand. 🤯\n\nIn the 3D model: **hover any rung** to see which letter pair is there!`,
+  spiral: `DNA looks like a **twisted ladder** — scientists call it a double helix.\n\nHere's the simple version:\n- The **two side rails** of the ladder = the DNA spine\n- The **rungs** = pairs of letters (A–T or G–C)\n\nNow twist that ladder — that's DNA! The twist makes it incredibly compact. If you stretched out all the DNA in just ONE of your cells, it would be **2 metres long** — yet it fits inside something smaller than a grain of sand.\n\nIn the 3D model: **hover any rung** to see which letter pair is there!`,
 
   aging: `The **Cell Aging Clock** (scientists call it a telomere) is like a countdown timer at the tips of your chromosomes.\n\nEvery time a cell divides and copies itself, the tips get a tiny bit shorter. When they get too short, the cell can no longer divide — that's part of aging.\n\nThe pattern **TTAGGG** repeats over and over at the tips — like a protective cap. TWIN's Cell Aging Clock snippet shows you this repeating pattern!`,
 
@@ -41,12 +42,12 @@ export function generateResponse(q) {
   if (kb) return kb;
   const lq = q.toLowerCase();
   if (lq.includes('hello') || lq.includes('hi') || lq.includes('hey'))
-    return `Hey! 👋 I'm TWIN, your DNA guide. No science background needed — I explain everything in plain English. Try loading a **Famous DNA Snippet** on the left, or ask me anything!`;
+    return `Hello! I'm TWIN, your DNA guide. No science background needed — I explain everything in plain English. Try loading a **Famous DNA Snippet** on the left, or ask me anything!`;
   if (lq.includes('mutation') || lq.includes('mistake') || lq.includes('change'))
     return `A **DNA mutation** is basically a typo in the DNA code. Instead of the "right" letter at a spot, there's a different one.\n\nMost mutations are harmless — your body has repair crews (like the Cancer Shield Gene) that fix them. But some mutations can change how a gene works.\n\nTWIN can show how a single letter change affects the health score!`;
   if (lq.includes('color') || lq.includes('colour') || lq.includes('blue') || lq.includes('green') || lq.includes('red'))
-    return `The 4 DNA letters each have a colour in TWIN:\n\n- 🔵 **Blue = A** (pairs with T)\n- 🟡 **Yellow = T** (pairs with A)\n- 🟢 **Green = G** (pairs with C)\n- 🔴 **Red = C** (pairs with G)\n- 🔷 **Purple** = the DNA spine (backbone)\n\nHover any coloured letter in the DNA Code panel to light up that rung in the 3D spiral!`;
-  return `Great question! 😊 Here are some things I can explain right now:\n- 🧬 What the 4 DNA letters mean\n- 📊 How the DNA health score works\n- 🛡️ What the Cancer Shield Gene does\n- 🌀 Why DNA looks like a twisted ladder\n- ⏳ How the cell aging clock works\n\nJust ask — no science words needed!`;
+    return `The 4 DNA letters each have a colour in TWIN:\n\n- **Blue = A** (pairs with T)\n- **Yellow = T** (pairs with A)\n- **Green = G** (pairs with C)\n- **Red-brown = C** (pairs with G)\n- **Purple** = the DNA spine (backbone)\n\nHover any coloured letter in the DNA Code panel to light up that rung in the 3D spiral!`;
+  return `Here are some things I can explain right now:\n- What the 4 DNA letters mean\n- How the DNA health score works\n- What the Cancer Shield Gene does\n- Why DNA looks like a twisted ladder\n- How the cell aging clock works\n\nJust ask — no science words needed!`;
 }
 
 /* ── DNA presets ─────────────────────────────────────────────── */
@@ -74,19 +75,19 @@ export const PRESET_INFO = {
 /* ── Per-base info used by hover tooltips ────────────────────── */
 export const BASE_INFO = {
   A: {
-    full: 'Adenine',  color: 'var(--A)', emoji: '🔵', pair: 'T', pairColor: 'var(--T)',
+    full: 'Adenine',  color: 'var(--A)', pair: 'T', pairColor: 'var(--T)',
     why: "A and T are best friends — they always pair together and form 2 chemical bonds. This makes A–T sections more flexible, which helps your cell 'read' the DNA.",
   },
   T: {
-    full: 'Thymine',  color: 'var(--T)', emoji: '🟡', pair: 'A', pairColor: 'var(--A)',
+    full: 'Thymine',  color: 'var(--T)', pair: 'A', pairColor: 'var(--A)',
     why: "T only appears in DNA (not in RNA). It pairs exclusively with A, forming 2 bonds. Regions with lots of T and A are easier for the cell to 'unzip' and read.",
   },
   G: {
-    full: 'Guanine',  color: 'var(--G)', emoji: '🟢', pair: 'C', pairColor: 'var(--C)',
+    full: 'Guanine',  color: 'var(--G)', pair: 'C', pairColor: 'var(--C)',
     why: 'G pairs with C using 3 chemical bonds — the strongest pairing in DNA. More G+C means stronger, more stable DNA that is harder to break apart.',
   },
   C: {
-    full: 'Cytosine', color: 'var(--C)', emoji: '🔴', pair: 'G', pairColor: 'var(--G)',
+    full: 'Cytosine', color: 'var(--C)', pair: 'G', pairColor: 'var(--G)',
     why: 'C always locks with G, also forming 3 strong bonds. DNA high in G+C (like the Cancer Shield Gene) is very stable and resistant to damage.',
   },
 };
@@ -115,10 +116,10 @@ export function simulateScore(seq) {
 
 /** Returns a plain-English label for a given health score. */
 export function scoreLabel(s) {
-  if (s > -1.0) return '✅ Excellent — this looks like real, healthy DNA';
-  if (s > -1.5) return '✅ Good — this DNA code looks natural';
-  if (s > -2.0) return '⚠️ Average — a bit unusual but possible';
-  return '⚠️ Unusual — might be synthetic or very rare';
+  if (s > -1.0) return 'Excellent — this looks like real, healthy DNA';
+  if (s > -1.5) return 'Good — this DNA code looks natural';
+  if (s > -2.0) return 'Average — a bit unusual but possible';
+  return 'Unusual — might be synthetic or very rare';
 }
 
 /** Converts a subset of Markdown (bold, italic, inline code, fenced code, newlines) to HTML. */
@@ -179,8 +180,8 @@ function parseEvo2Response(data) {
  * Returns a plain-English label + colour for a delta score.
  */
 export function interpretDelta(delta) {
-  if (delta >  0.1) return { label: '✅ Likely Neutral',         color: 'var(--green)',  desc: 'Evo2 sees this change as natural or even beneficial.' };
-  if (delta > -0.5) return { label: '🟡 Possibly Neutral',       color: 'var(--amber)',  desc: 'Borderline — Evo2 sees a minor deviation from the reference.' };
-  if (delta > -1.5) return { label: '⚠️ Potentially Damaging',   color: '#f97316',       desc: 'Evo2 rates this variant as notably unusual — could affect gene function.' };
-  return                    { label: '🔴 Likely Damaging',        color: 'var(--C)',      desc: 'Evo2 sees this change as highly unusual — consistent with a harmful mutation.' };
+  if (delta >  0.1) return { label: 'Likely neutral',         color: 'var(--base-G)',  desc: 'Evo2 sees this change as natural or even beneficial.' };
+  if (delta > -0.5) return { label: 'Possibly neutral',       color: 'var(--base-T)',  desc: 'Borderline — Evo2 sees a minor deviation from the reference.' };
+  if (delta > -1.5) return { label: 'Potentially damaging',   color: 'var(--base-T)',  desc: 'Evo2 rates this variant as notably unusual — could affect gene function.' };
+  return                    { label: 'Likely damaging',        color: 'var(--base-C)',  desc: 'Evo2 sees this change as highly unusual — consistent with a harmful mutation.' };
 }
