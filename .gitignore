@@ -54,6 +54,20 @@ evo2-frontend/out/
 evo2-frontend/.env*.local
 evo2-frontend/*.tsbuildinfo
 evo2-frontend/next-env.d.ts
+
+# Frontend (twin-frontend - Next.js)
+twin-frontend/node_modules/
+twin-frontend/.next/
+twin-frontend/out/
+twin-frontend/.env*.local
+twin-frontend/*.tsbuildinfo
+twin-frontend/next-env.d.ts
+
+# Frontend (twin-dna-explorer - Vite)
+twin-dna-explorer/node_modules/
+twin-dna-explorer/dist/
+
+# Backend (evo2-backend - Python/Modal)
 evo2-backend/__pycache__/
 evo2-backend/*.pyc
 evo2-backend/*.pyo
