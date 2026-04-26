@@ -82,6 +82,12 @@ Deploy backend when needed:
 modal deploy main.py
 ```
 
+For fast local iteration (lower cost than repeated deploys), use:
+
+```bash
+modal serve main.py
+```
+
 ### Frontend (`twin-frontend`)
 
 Open a new terminal and go to your project folder:
@@ -92,3 +98,40 @@ cd twin-frontend
 npm i
 npm run dev
 ```
+
+### Optional 3D Model Assets
+
+The 3D twin visual loads model files from:
+
+- `twin-frontend/public/models/dna-helix.glb`
+- `twin-frontend/public/models/human-body.glb`
+
+If these files are missing, the UI automatically shows lightweight fallback shapes.
+
+## Hackathon Demo Runbook (1-2 minutes)
+
+Use this script for judges and non-technical users:
+
+1. **Start with user context**
+   - "This tool translates lifestyle and DNA signals into simple weekly actions."
+2. **Create twin baseline**
+   - Fill name, age, sleep, stress, activity, nutrition, smoking.
+   - Mention DNA is optional.
+3. **Show future health trend**
+   - Highlight plain-language takeaway and projected 5-year improvement.
+4. **Open 3D twin visual**
+   - Explain it as an educational body + DNA context view.
+5. **DNA signal exploration (advanced)**
+   - Search `BRCA1`, open known variants, run Evo2 analysis.
+   - Show comparison card: ClinVar vs Evo2 in plain-language risk terms.
+6. **Chat loop**
+   - Ask: "What should I change this week?"
+   - Show returned format: explanation, action, expected impact, uncertainty/safety note.
+7. **Close with safety framing**
+   - "This is a decision-support prototype, not a diagnostic tool."
+
+## Communication Principles Used
+
+- Plain-language first, technical details second.
+- Risk numbers are explained with words.
+- Every recommendation includes uncertainty and a medical safety note.
