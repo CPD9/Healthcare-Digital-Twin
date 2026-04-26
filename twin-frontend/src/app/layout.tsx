@@ -4,9 +4,9 @@ import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 
 export const metadata: Metadata = {
-  title: "Evo2 Variant Analysis",
-  description: "Evo2 Variant Analysis",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  title: "Twin R&D",
+  description: "Twin R&D — DNA variant analysis and genome research tool powered by Evo2",
+  icons: [{ rel: "icon", url: "/favicon.svg", type: "image/svg+xml" }],
 };
 
 const geist = Geist({

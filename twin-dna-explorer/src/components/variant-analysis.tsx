@@ -18,11 +18,17 @@ import React, {
 } from "react";
 import {
   getClassificationColorClasses,
+  getRiskToneBarClass,
   getNucleotideColorClass,
 } from "~/utils/coloring-utils";
 import { Button } from "./ui/button";
-import { match } from "node:assert";
 import { Zap } from "lucide-react";
+import {
+  TERM_LABELS,
+  explainDeltaScore,
+  toNaturalFrequency,
+  toPlainRiskLabel,
+} from "~/utils/plain-language";
 
 export interface VariantAnalysisHandle {
   focusAlternativeInput: () => void;
@@ -52,7 +58,7 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
     ref,
   ) => {
     const [variantPosition, setVariantPosition] = useState<string>(
-      geneBounds?.min?.toString() || "",
+      geneBounds?.min?.toString() ?? "",
     );
     const [variantReference, setVariantReference] = useState("");
     const [variantAlternative, setVariantAlternative] = useState("");
@@ -119,18 +125,17 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
       <Card className="gap-0 border-none bg-white py-0 shadow-sm">
         <CardHeader className="pt-4 pb-2">
           <CardTitle className="text-sm font-normal text-[#3c4f3d]/70">
-            Variant Analysis
+            Check one DNA change
           </CardTitle>
         </CardHeader>
         <CardContent className="pb-4">
           <p className="mb-4 text-xs text-[#3c4f3d]/80">
-            Predict the impact of genetic variants using the Evo2 deep learning
-            model.
+            We estimate whether this DNA change may raise or lower health risk.
           </p>
           <div className="flex flex-wrap items-end gap-4">
             <div>
               <label className="mb-1 block text-xs text-[#3c4f3d]/70">
-                Position
+                DNA position
               </label>
               <Input
                 value={variantPosition}
@@ -140,7 +145,7 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
             </div>
             <div>
               <label className="mb-1 block text-xs text-[#3c4f3d]/70">
-                Alternative (variant)
+                New DNA letter
               </label>
               <Input
                 ref={alternativeInputRef}
@@ -185,7 +190,7 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
                   Analyzing...
                 </>
               ) : (
-                "Analyze variant"
+                "Analyze DNA change"
               )}
             </Button>
           </div>
@@ -201,7 +206,7 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
                     parseInt(variantPosition.replaceAll(",", "")),
               )
               .map((matchedVariant) => {
-                const refAltMatch = matchedVariant.title.match(/(\w)>(\w)/);
+                const refAltMatch = /(\w)>(\w)/.exec(matchedVariant.title);
 
                 let ref = null;
                 let alt = null;
@@ -219,7 +224,7 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
                   >
                     <div className="mb-3 flex items-center justify-between">
                       <h4 className="text-sm font-medium text-[#3c4f3d]">
-                        Known Variant Detected
+                        This DNA change is already known
                       </h4>
                       <span className="text-xs text-[#3c4f3d]/70">
                         Position: {matchedVariant.location}
@@ -229,7 +234,7 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
                         <div className="mb-1 text-xs font-medium text-[#3c4f3d]/70">
-                          Variant Details
+                          Plain-language summary
                         </div>
                         <div className="text-sm">{matchedVariant.title}</div>
                         <div className="mt-2 text-sm">
@@ -245,13 +250,16 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
                           </span>
                         </div>
                         <div className="mt-2 text-xs text-[#3c4f3d]/70">
-                          ClinVar classification
+                          ClinVar label
                           <span
                             className={`ml-1 rounded-sm px-2 py-0.5 ${getClassificationColorClasses(matchedVariant.classification)}`}
                           >
                             {matchedVariant.classification || "Unknown"}
                           </span>
                         </div>
+                        <p className="mt-2 text-xs text-[#3c4f3d]/70">
+                          {toPlainRiskLabel(matchedVariant.classification)}
+                        </p>
                       </div>
                       <div className="flex items-center justify-end">
                         <Button
@@ -261,7 +269,7 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
                           className="h-7 cursor-pointer border-[#3c4f3d]/20 bg-[#e9eeea] text-xs text-[#3c4f3d] hover:bg-[#3c4f3d]/10"
                           onClick={() => {
                             setVariantAlternative(alt);
-                            handleVariantSubmit(
+                            void handleVariantSubmit(
                               variantPosition.replaceAll(",", ""),
                               alt,
                             );
@@ -275,7 +283,7 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
                           ) : (
                             <>
                               <Zap className="mr-1 inline-block h-3 w-3" />
-                              Analyze this Variant
+                              Analyze this DNA change
                             </>
                           )}
                         </Button>
@@ -292,13 +300,13 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
           {variantResult && (
             <div className="mt-6 rounded-md border border-[#3c4f3d]/10 bg-[#e9eeea]/30 p-4">
               <h4 className="mb-3 text-sm font-medium text-[#3c4f3d]">
-                Analysis Result
+                What this means for you
               </h4>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <div className="mb-2">
                     <div className="text-xs font-medium text-[#3c4f3d]/70">
-                      Variant
+                      DNA change tested
                     </div>
                     <div className="text-sm">
                       {gene?.symbol} {variantResult.position}{" "}
@@ -311,32 +319,35 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
                   </div>
                   <div>
                     <div className="text-xs font-medium text-[#3c4f3d]/70">
-                      Delta likelihood score
+                      {TERM_LABELS.deltaScore.title}
                     </div>
                     <div className="text-sm">
                       {variantResult.delta_score.toFixed(6)}
                     </div>
                     <div className="text-xs text-[#3c4f3d]/60">
-                      Negative score indicates loss of function
+                      {explainDeltaScore(variantResult.delta_score)}
                     </div>
                   </div>
                 </div>
                 <div>
                   <div className="text-xs font-medium text-[#3c4f3d]/70">
-                    Prediction
+                    Risk direction
                   </div>
                   <div
                     className={`inline-block rounded-lg px-3 py-1 text-xs ${getClassificationColorClasses(variantResult.prediction)}`}
                   >
                     {variantResult.prediction}
                   </div>
+                  <div className="mt-1 text-xs text-[#3c4f3d]/70">
+                    {toPlainRiskLabel(variantResult.prediction)}
+                  </div>
                   <div className="mt-3">
                     <div className="text-xs font-medium text-[#3c4f3d]/70">
-                      Confidence
+                      {TERM_LABELS.confidence.title}
                     </div>
                     <div className="mt-1 h-2 w-full rounded-full bg-[#e9eeea]">
                       <div
-                        className={`h-2 rounded-full ${variantResult.prediction.includes("pathogenic") ? "bg-red-600" : "bg-green-600"}`}
+                        className={`h-2 rounded-full ${getRiskToneBarClass(variantResult.prediction)}`}
                         style={{
                           width: `${Math.min(100, variantResult.classification_confidence * 100)}%`,
                         }}
@@ -348,9 +359,24 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
                       )}
                       %
                     </div>
+                    <div className="text-xs text-[#3c4f3d]/60">
+                      About{" "}
+                      {toNaturalFrequency(
+                        variantResult.classification_confidence * 100,
+                      )}{" "}
+                      similar predictions.
+                    </div>
                   </div>
                 </div>
               </div>
+              <details className="mt-4 rounded-md border border-[#3c4f3d]/10 bg-white/80 p-3">
+                <summary className="cursor-pointer text-xs font-medium text-[#3c4f3d]">
+                  Scientific details
+                </summary>
+                <p className="mt-2 text-xs text-[#3c4f3d]/70">
+                  {TERM_LABELS.deltaScore.subtitle}. {TERM_LABELS.confidence.subtitle}.
+                </p>
+              </details>
             </div>
           )}
         </CardContent>
@@ -358,5 +384,7 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
     );
   },
 );
+
+VariantAnalysis.displayName = "VariantAnalysis";
 
 export default VariantAnalysis;
