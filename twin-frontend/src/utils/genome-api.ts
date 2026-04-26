@@ -1,5 +1,7 @@
 import { env } from "~/env";
 
+// ── Public types ──────────────────────────────────────────────────────────────
+
 export interface GenomeAssemblyFromSearch {
   id: string;
   name: string;
@@ -119,6 +121,49 @@ export interface TwinChatResponse {
   ui_intents?: UiIntent[];
 }
 
+// ── Private raw API response types ───────────────────────────────────────────
+
+interface UcscGenomeInfo {
+  organism?: string;
+  description?: string;
+  sourceName?: string;
+  active?: boolean;
+}
+
+interface UcscGenomesRaw {
+  ucscGenomes?: Record<string, UcscGenomeInfo>;
+}
+
+interface UcscChromosomesRaw {
+  chromosomes?: Record<string, number>;
+}
+
+// NCBI clinical-tables returns [count, terms[], fieldMap{}, rows[][]]
+type NcbiGenesRaw = [number, string[], Record<string, string[]>, string[][]];
+
+interface NcbiGenomicInfo {
+  chrstart: number;
+  chrstop: number;
+  strand?: string;
+}
+
+interface NcbiGeneDetail {
+  genomicinfo?: NcbiGenomicInfo[];
+  summary?: string;
+  organism?: { scientificname: string; commonname: string };
+}
+
+interface NcbiGeneSummaryRaw {
+  result?: Record<string, NcbiGeneDetail>;
+}
+
+interface UcscSequenceRaw {
+  dna?: string;
+  error?: string;
+}
+
+// ── API functions ─────────────────────────────────────────────────────────────
+
 export async function getAvailableGenomes() {
   const apiUrl = "https://api.genome.ucsc.edu/list/ucscGenomes";
   const response = await fetch(apiUrl);
@@ -126,7 +171,7 @@ export async function getAvailableGenomes() {
     throw new Error("Failed to fetch genome list from UCSC API");
   }
 
-  const genomeData = await response.json();
+  const genomeData = (await response.json()) as UcscGenomesRaw;
   if (!genomeData.ucscGenomes) {
     throw new Error("UCSC API error: missing ucscGenomes");
   }
@@ -135,14 +180,14 @@ export async function getAvailableGenomes() {
   const structuredGenomes: Record<string, GenomeAssemblyFromSearch[]> = {};
 
   for (const genomeId in genomes) {
-    const genomeInfo = genomes[genomeId];
-    const organism = genomeInfo.organism || "Other";
+    const genomeInfo = genomes[genomeId]!;
+    const organism = genomeInfo.organism ?? "Other";
 
-    if (!structuredGenomes[organism]) structuredGenomes[organism] = [];
-    structuredGenomes[organism].push({
+    structuredGenomes[organism] ??= [];
+    structuredGenomes[organism]?.push({
       id: genomeId,
-      name: genomeInfo.description || genomeId,
-      sourceName: genomeInfo.sourceName || genomeId,
+      name: genomeInfo.description ?? genomeId,
+      sourceName: genomeInfo.sourceName ?? genomeId,
       active: !!genomeInfo.active,
     });
   }
@@ -157,7 +202,7 @@ export async function getGenomeChromosomes(genomeId: string) {
     throw new Error("Failed to fetch chromosome list from UCSC API");
   }
 
-  const chromosomeData = await response.json();
+  const chromosomeData = (await response.json()) as UcscChromosomesRaw;
   if (!chromosomeData.chromosomes) {
     throw new Error("UCSC API error: missing chromosomes");
   }
@@ -172,11 +217,11 @@ export async function getGenomeChromosomes(genomeId: string) {
       continue;
     chromosomes.push({
       name: chromId,
-      size: chromosomeData.chromosomes[chromId],
+      size: chromosomeData.chromosomes[chromId] ?? 0,
     });
   }
 
-  // chr1, chr2, ... chrX, chrY
+  // Sort: chr1, chr2, … chrX, chrY
   chromosomes.sort((a, b) => {
     const anum = a.name.replace("chr", "");
     const bnum = b.name.replace("chr", "");
@@ -203,26 +248,26 @@ export async function searchGenes(query: string, genome: string) {
     throw new Error("NCBI API Error");
   }
 
-  const data = await response.json();
+  const data = (await response.json()) as NcbiGenesRaw;
   const results: GeneFromSearch[] = [];
+  const [count, , fieldMap, rows] = data;
 
-  if (data[0] > 0) {
-    const fieldMap = data[2];
-    const geneIds = fieldMap.GeneID || [];
-    for (let i = 0; i < Math.min(10, data[0]); ++i) {
-      if (i < data[3].length) {
+  if (count > 0) {
+    const geneIds: string[] = fieldMap.GeneID ?? [];
+    for (let i = 0; i < Math.min(10, count); ++i) {
+      if (i < rows.length) {
         try {
-          const display = data[3][i];
-          let chrom = display[0];
+          const display = rows[i]!;
+          let chrom = display[0] ?? "";
           if (chrom && !chrom.startsWith("chr")) {
             chrom = `chr${chrom}`;
           }
           results.push({
-            symbol: display[2],
-            name: display[3],
+            symbol: display[2] ?? "",
+            name: display[3] ?? "",
             chrom,
-            description: display[3],
-            gene_id: geneIds[i] || "",
+            description: display[3] ?? "",
+            gene_id: geneIds[i] ?? "",
           });
         } catch {
           continue;
@@ -250,13 +295,13 @@ export async function fetchGeneDetails(geneId: string): Promise<{
       return { geneDetails: null, geneBounds: null, initialRange: null };
     }
 
-    const detailData = await detailsResponse.json();
+    const detailData = (await detailsResponse.json()) as NcbiGeneSummaryRaw;
 
-    if (detailData.result && detailData.result[geneId]) {
+    if (detailData.result?.[geneId]) {
       const detail = detailData.result[geneId];
 
-      if (detail.genomicinfo && detail.genomicinfo.length > 0) {
-        const info = detail.genomicinfo[0];
+      if (detail?.genomicinfo && detail.genomicinfo.length > 0) {
+        const info = detail.genomicinfo[0]!;
 
         const minPos = Math.min(info.chrstart, info.chrstop);
         const maxPos = Math.max(info.chrstart, info.chrstop);
@@ -272,7 +317,7 @@ export async function fetchGeneDetails(geneId: string): Promise<{
     }
 
     return { geneDetails: null, geneBounds: null, initialRange: null };
-  } catch (err) {
+  } catch {
     return { geneDetails: null, geneBounds: null, initialRange: null };
   }
 }
@@ -289,24 +334,19 @@ export async function fetchGeneSequence(
 }> {
   try {
     const chromosome = chrom.startsWith("chr") ? chrom : `chr${chrom}`;
-
-    const apiStart = start - 1;
-    const apiEnd = end;
-
-    const apiUrl = `https://api.genome.ucsc.edu/getData/sequence?genome=${genomeId};chrom=${chromosome};start=${apiStart};end=${apiEnd}`;
+    const apiUrl = `https://api.genome.ucsc.edu/getData/sequence?genome=${genomeId};chrom=${chromosome};start=${start - 1};end=${end}`;
     const response = await fetch(apiUrl);
-    const data = await response.json();
+    const data = (await response.json()) as UcscSequenceRaw;
 
     const actualRange = { start, end };
 
-    if (data.error || !data.dna) {
+    if (data.error ?? !data.dna) {
       return { sequence: "", actualRange, error: data.error };
     }
 
-    const sequence = data.dna.toUpperCase();
-
+    const sequence = (data.dna ?? "").toUpperCase();
     return { sequence, actualRange };
-  } catch (err) {
+  } catch {
     return {
       sequence: "",
       actualRange: { start, end },
@@ -371,18 +411,19 @@ export async function analyzeVariantWithAPI({
     throw new Error("Failed to analyze variant " + errorText);
   }
 
-  return await response.json();
+  return (await response.json()) as AnalysisResult;
 }
 
 function getTwinUrl(value: string | undefined, envName: string): string {
   if (!value) {
     throw new Error(`Missing ${envName}. Add it to your .env file.`);
   }
-
   return value;
 }
 
-export async function createTwinProfile(profile: TwinProfileRequest) {
+export async function createTwinProfile(
+  profile: TwinProfileRequest,
+): Promise<void> {
   const url = getTwinUrl(
     env.NEXT_PUBLIC_TWIN_PROFILE_BASE_URL,
     "NEXT_PUBLIC_TWIN_PROFILE_BASE_URL",
@@ -397,8 +438,6 @@ export async function createTwinProfile(profile: TwinProfileRequest) {
     const errorText = await response.text();
     throw new Error("Failed to create twin profile " + errorText);
   }
-
-  return await response.json();
 }
 
 export async function simulateTwinProfile(params: {
@@ -421,7 +460,7 @@ export async function simulateTwinProfile(params: {
     throw new Error("Failed to simulate twin profile " + errorText);
   }
 
-  return await response.json();
+  return (await response.json()) as TwinSimulationResponse;
 }
 
 export async function chatWithTwin(params: {
@@ -444,5 +483,5 @@ export async function chatWithTwin(params: {
     throw new Error("Failed to chat with twin " + errorText);
   }
 
-  return await response.json();
+  return (await response.json()) as TwinChatResponse;
 }

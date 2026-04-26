@@ -58,7 +58,7 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
     ref,
   ) => {
     const [variantPosition, setVariantPosition] = useState<string>(
-      geneBounds?.min?.toString() || "",
+      geneBounds?.min?.toString() ?? "",
     );
     const [variantReference, setVariantReference] = useState("");
     const [variantAlternative, setVariantAlternative] = useState("");
@@ -206,7 +206,7 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
                     parseInt(variantPosition.replaceAll(",", "")),
               )
               .map((matchedVariant) => {
-                const refAltMatch = matchedVariant.title.match(/(\w)>(\w)/);
+                const refAltMatch = /(\w)>(\w)/.exec(matchedVariant.title);
 
                 let ref = null;
                 let alt = null;
@@ -269,7 +269,7 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
                           className="h-7 cursor-pointer border-[#3c4f3d]/20 bg-[#e9eeea] text-xs text-[#3c4f3d] hover:bg-[#3c4f3d]/10"
                           onClick={() => {
                             setVariantAlternative(alt);
-                            handleVariantSubmit(
+                            void handleVariantSubmit(
                               variantPosition.replaceAll(",", ""),
                               alt,
                             );
@@ -384,5 +384,7 @@ const VariantAnalysis = forwardRef<VariantAnalysisHandle, VariantAnalysisProps>(
     );
   },
 );
+
+VariantAnalysis.displayName = "VariantAnalysis";
 
 export default VariantAnalysis;
