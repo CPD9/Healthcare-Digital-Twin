@@ -475,8 +475,8 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 /* ── Avatar scene ────────────────────────────────────────────── */
 .avatar-scene {
   position: relative;
-  width: min(210px, calc((100vh - 190px) * 0.38));
-  height: min(300px, calc((100vh - 190px) * 0.55));
+  width: min(630px, calc((100vh - 190px) * 1.14));
+  height: min(900px, calc((100vh - 190px) * 1.65));
   display: flex; align-items: center; justify-content: center;
   border-radius: 20px; overflow: hidden;
   box-shadow: 0 0 60px rgba(74,186,112,.18), 0 0 120px rgba(74,186,112,.08);
@@ -1263,6 +1263,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
   .hud-panel { padding: 12px; border-radius: 10px; }
   .stat-rings-row { gap: 6px; justify-content: space-around; }
   .stat-ring-wrap svg { width: 58px; height: 58px; }
+  .stat-ring-wrap > div:first-child { width: 58px !important; height: 58px !important; }
   .stat-ring-label { font-size: 9px; }
 
   /* ── Chat panel on mobile ── */
