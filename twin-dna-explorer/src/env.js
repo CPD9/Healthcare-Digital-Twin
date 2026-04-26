@@ -17,6 +17,9 @@ export const env = createEnv({
    */
   client: {
     NEXT_PUBLIC_ANALYZE_SINGLE_VARIANT_BASE_URL: z.string(),
+    NEXT_PUBLIC_TWIN_PROFILE_BASE_URL: z.string().optional(),
+    NEXT_PUBLIC_TWIN_SIMULATE_BASE_URL: z.string().optional(),
+    NEXT_PUBLIC_TWIN_CHAT_BASE_URL: z.string().optional(),
   },
 
   /**
@@ -27,6 +30,11 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     NEXT_PUBLIC_ANALYZE_SINGLE_VARIANT_BASE_URL:
       process.env.NEXT_PUBLIC_ANALYZE_SINGLE_VARIANT_BASE_URL,
+    NEXT_PUBLIC_TWIN_PROFILE_BASE_URL:
+      process.env.NEXT_PUBLIC_TWIN_PROFILE_BASE_URL,
+    NEXT_PUBLIC_TWIN_SIMULATE_BASE_URL:
+      process.env.NEXT_PUBLIC_TWIN_SIMULATE_BASE_URL,
+    NEXT_PUBLIC_TWIN_CHAT_BASE_URL: process.env.NEXT_PUBLIC_TWIN_CHAT_BASE_URL,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
