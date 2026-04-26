@@ -1,6 +1,5 @@
+import { Viaoda_Libre } from "next/font/google";
 import { env } from "~/env";
-
-// ── Public types ──────────────────────────────────────────────────────────────
 
 export interface GenomeAssemblyFromSearch {
   id: string;
@@ -66,104 +65,6 @@ export interface AnalysisResult {
   classification_confidence: number;
 }
 
-export interface LifestyleProfile {
-  sleep_hours: number;
-  stress_level: number;
-  activity_minutes_per_week: number;
-  nutrition_quality: number;
-  smoking: boolean;
-}
-
-export interface TwinProfileRequest {
-  name: string;
-  age: number;
-  lifestyle: LifestyleProfile;
-  has_dna_data: boolean;
-  genome_assembly?: string;
-  dna_summary?: string;
-}
-
-export interface TwinSimulationResponse {
-  confidence_tier: "standard" | "enhanced";
-  current_state_summary: {
-    baseline_risk_score: number;
-    primary_lever: string;
-    dna_mode: "provided" | "unknown";
-  };
-  future_projection_baseline: Array<{
-    years: number;
-    risk_score: number;
-    health_index: number;
-  }>;
-  future_projection_improved: Array<{
-    years: number;
-    risk_score: number;
-    health_index: number;
-  }>;
-  delta: {
-    risk_reduction: number;
-    health_index_gain_5y: number;
-  };
-  top_levers: string[];
-}
-
-export interface UiIntent {
-  panel_type: string;
-  payload?: Record<string, string>;
-}
-
-export interface TwinChatResponse {
-  assistant_message: string;
-  action_suggestion: string;
-  expected_impact: string;
-  uncertainty_note?: string;
-  safety_note?: string;
-  ui_intents?: UiIntent[];
-}
-
-// ── Private raw API response types ───────────────────────────────────────────
-
-interface UcscGenomeInfo {
-  organism?: string;
-  description?: string;
-  sourceName?: string;
-  active?: boolean;
-}
-
-interface UcscGenomesRaw {
-  ucscGenomes?: Record<string, UcscGenomeInfo>;
-}
-
-interface UcscChromosomesRaw {
-  chromosomes?: Record<string, number>;
-}
-
-// NCBI clinical-tables returns [count, terms[], fieldMap{}, rows[][]]
-type NcbiGenesRaw = [number, string[], Record<string, string[]>, string[][]];
-
-interface NcbiGenomicInfo {
-  chrstart: number;
-  chrstop: number;
-  strand?: string;
-}
-
-interface NcbiGeneDetail {
-  genomicinfo?: NcbiGenomicInfo[];
-  summary?: string;
-  organism?: { scientificname: string; commonname: string };
-}
-
-interface NcbiGeneSummaryRaw {
-  result?: Record<string, NcbiGeneDetail>;
-}
-
-interface UcscSequenceRaw {
-  dna?: string;
-  error?: string;
-}
-
-// ── API functions ─────────────────────────────────────────────────────────────
-
 export async function getAvailableGenomes() {
   const apiUrl = "https://api.genome.ucsc.edu/list/ucscGenomes";
   const response = await fetch(apiUrl);
@@ -171,7 +72,7 @@ export async function getAvailableGenomes() {
     throw new Error("Failed to fetch genome list from UCSC API");
   }
 
-  const genomeData = (await response.json()) as UcscGenomesRaw;
+  const genomeData = await response.json();
   if (!genomeData.ucscGenomes) {
     throw new Error("UCSC API error: missing ucscGenomes");
   }
@@ -180,14 +81,14 @@ export async function getAvailableGenomes() {
   const structuredGenomes: Record<string, GenomeAssemblyFromSearch[]> = {};
 
   for (const genomeId in genomes) {
-    const genomeInfo = genomes[genomeId]!;
-    const organism = genomeInfo.organism ?? "Other";
+    const genomeInfo = genomes[genomeId];
+    const organism = genomeInfo.organism || "Other";
 
-    structuredGenomes[organism] ??= [];
-    structuredGenomes[organism]?.push({
+    if (!structuredGenomes[organism]) structuredGenomes[organism] = [];
+    structuredGenomes[organism].push({
       id: genomeId,
-      name: genomeInfo.description ?? genomeId,
-      sourceName: genomeInfo.sourceName ?? genomeId,
+      name: genomeInfo.description || genomeId,
+      sourceName: genomeInfo.sourceName || genomeId,
       active: !!genomeInfo.active,
     });
   }
@@ -202,7 +103,7 @@ export async function getGenomeChromosomes(genomeId: string) {
     throw new Error("Failed to fetch chromosome list from UCSC API");
   }
 
-  const chromosomeData = (await response.json()) as UcscChromosomesRaw;
+  const chromosomeData = await response.json();
   if (!chromosomeData.chromosomes) {
     throw new Error("UCSC API error: missing chromosomes");
   }
@@ -217,11 +118,11 @@ export async function getGenomeChromosomes(genomeId: string) {
       continue;
     chromosomes.push({
       name: chromId,
-      size: chromosomeData.chromosomes[chromId] ?? 0,
+      size: chromosomeData.chromosomes[chromId],
     });
   }
 
-  // Sort: chr1, chr2, … chrX, chrY
+  // chr1, chr2, ... chrX, chrY
   chromosomes.sort((a, b) => {
     const anum = a.name.replace("chr", "");
     const bnum = b.name.replace("chr", "");
@@ -248,26 +149,26 @@ export async function searchGenes(query: string, genome: string) {
     throw new Error("NCBI API Error");
   }
 
-  const data = (await response.json()) as NcbiGenesRaw;
+  const data = await response.json();
   const results: GeneFromSearch[] = [];
-  const [count, , fieldMap, rows] = data;
 
-  if (count > 0) {
-    const geneIds: string[] = fieldMap.GeneID ?? [];
-    for (let i = 0; i < Math.min(10, count); ++i) {
-      if (i < rows.length) {
+  if (data[0] > 0) {
+    const fieldMap = data[2];
+    const geneIds = fieldMap.GeneID || [];
+    for (let i = 0; i < Math.min(10, data[0]); ++i) {
+      if (i < data[3].length) {
         try {
-          const display = rows[i]!;
-          let chrom = display[0] ?? "";
+          const display = data[3][i];
+          let chrom = display[0];
           if (chrom && !chrom.startsWith("chr")) {
             chrom = `chr${chrom}`;
           }
           results.push({
-            symbol: display[2] ?? "",
-            name: display[3] ?? "",
+            symbol: display[2],
+            name: display[3],
             chrom,
-            description: display[3] ?? "",
-            gene_id: geneIds[i] ?? "",
+            description: display[3],
+            gene_id: geneIds[i] || "",
           });
         } catch {
           continue;
@@ -295,13 +196,13 @@ export async function fetchGeneDetails(geneId: string): Promise<{
       return { geneDetails: null, geneBounds: null, initialRange: null };
     }
 
-    const detailData = (await detailsResponse.json()) as NcbiGeneSummaryRaw;
+    const detailData = await detailsResponse.json();
 
-    if (detailData.result?.[geneId]) {
+    if (detailData.result && detailData.result[geneId]) {
       const detail = detailData.result[geneId];
 
-      if (detail?.genomicinfo && detail.genomicinfo.length > 0) {
-        const info = detail.genomicinfo[0]!;
+      if (detail.genomicinfo && detail.genomicinfo.length > 0) {
+        const info = detail.genomicinfo[0];
 
         const minPos = Math.min(info.chrstart, info.chrstop);
         const maxPos = Math.max(info.chrstart, info.chrstop);
@@ -317,7 +218,7 @@ export async function fetchGeneDetails(geneId: string): Promise<{
     }
 
     return { geneDetails: null, geneBounds: null, initialRange: null };
-  } catch {
+  } catch (err) {
     return { geneDetails: null, geneBounds: null, initialRange: null };
   }
 }
@@ -334,19 +235,24 @@ export async function fetchGeneSequence(
 }> {
   try {
     const chromosome = chrom.startsWith("chr") ? chrom : `chr${chrom}`;
-    const apiUrl = `https://api.genome.ucsc.edu/getData/sequence?genome=${genomeId};chrom=${chromosome};start=${start - 1};end=${end}`;
+
+    const apiStart = start - 1;
+    const apiEnd = end;
+
+    const apiUrl = `https://api.genome.ucsc.edu/getData/sequence?genome=${genomeId};chrom=${chromosome};start=${apiStart};end=${apiEnd}`;
     const response = await fetch(apiUrl);
-    const data = (await response.json()) as UcscSequenceRaw;
+    const data = await response.json();
 
     const actualRange = { start, end };
 
-    if (data.error ?? !data.dna) {
+    if (data.error || !data.dna) {
       return { sequence: "", actualRange, error: data.error };
     }
 
-    const sequence = (data.dna ?? "").toUpperCase();
+    const sequence = data.dna.toUpperCase();
+
     return { sequence, actualRange };
-  } catch {
+  } catch (err) {
     return {
       sequence: "",
       actualRange: { start, end },
@@ -360,28 +266,88 @@ export async function fetchClinvarVariants(
   geneBound: GeneBounds,
   genomeId: string,
 ): Promise<ClinvarVariant[]> {
+  const chromFormatted = chrom.replace(/^chr/i, "");
+
   const minBound = Math.min(geneBound.min, geneBound.max);
   const maxBound = Math.max(geneBound.min, geneBound.max);
-  const params = new URLSearchParams({
-    chrom,
-    minBound: minBound.toString(),
-    maxBound: maxBound.toString(),
-    genomeId,
+
+  const positionField = genomeId === "hg19" ? "chrpos37" : "chrpos38";
+  const searchTerm = `${chromFormatted}[chromosome] AND ${minBound}:${maxBound}[${positionField}]`;
+
+  const searchUrl =
+    "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi";
+  const searchParams = new URLSearchParams({
+    db: "clinvar",
+    term: searchTerm,
+    retmode: "json",
+    retmax: "20",
   });
 
-  const response = await fetch(`/api/clinvar?${params.toString()}`);
+  const searchResponse = await fetch(`${searchUrl}?${searchParams.toString()}`);
 
-  if (!response.ok) {
-    const errorData = (await response.json().catch(() => ({}))) as {
-      error?: string;
-    };
+  if (!searchResponse.ok) {
+    throw new Error("ClinVar search failed: " + searchResponse.statusText);
+  }
+
+  const searchData = await searchResponse.json();
+
+  if (
+    !searchData.esearchresult ||
+    !searchData.esearchresult.idlist ||
+    searchData.esearchresult.idlist.length === 0
+  ) {
+    console.log("No ClinVar variants found");
+    return [];
+  }
+
+  const variantIds = searchData.esearchresult.idlist;
+
+  const summaryUrl =
+    "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi";
+  const summaryParams = new URLSearchParams({
+    db: "clinvar",
+    id: variantIds.join(","),
+    retmode: "json",
+  });
+
+  const summaryResponse = await fetch(
+    `${summaryUrl}?${summaryParams.toString()}`,
+  );
+
+  if (!summaryResponse.ok) {
     throw new Error(
-      errorData.error ?? `ClinVar fetch failed: ${response.statusText}`,
+      "Failed to fetch variant details: " + summaryResponse.statusText,
     );
   }
 
-  const data = (await response.json()) as { variants: ClinvarVariant[] };
-  return data.variants;
+  const summaryData = await summaryResponse.json();
+  const variants: ClinvarVariant[] = [];
+
+  if (summaryData.result && summaryData.result.uids) {
+    for (const id of summaryData.result.uids) {
+      const variant = summaryData.result[id];
+      variants.push({
+        clinvar_id: id,
+        title: variant.title,
+        variation_type: (variant.obj_type || "Unknown")
+          .split(" ")
+          .map(
+            (word: string) =>
+              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+          )
+          .join(" "),
+        classification:
+          variant.germline_classification.description || "Unknown",
+        gene_sort: variant.gene_sort || "",
+        chromosome: chromFormatted,
+        location: variant.location_sort
+          ? parseInt(variant.location_sort).toLocaleString()
+          : "Unknown",
+      });
+    }
+  }
+
+  return variants;
 }
 
 export async function analyzeVariantWithAPI({
@@ -402,86 +368,14 @@ export async function analyzeVariantWithAPI({
     chromosome: chromosome,
   });
 
-  const response = await fetch(`/api/analyze?${queryParams.toString()}`, {
-    method: "POST",
-  });
+  const url = `${env.NEXT_PUBLIC_ANALYZE_SINGLE_VARIANT_BASE_URL}?${queryParams.toString()}`;
+
+  const response = await fetch(url, { method: "POST" });
 
   if (!response.ok) {
     const errorText = await response.text();
     throw new Error("Failed to analyze variant " + errorText);
   }
 
-  return (await response.json()) as AnalysisResult;
-}
-
-function getTwinUrl(value: string | undefined, envName: string): string {
-  if (!value) {
-    throw new Error(`Missing ${envName}. Add it to your .env file.`);
-  }
-  return value;
-}
-
-export async function createTwinProfile(
-  profile: TwinProfileRequest,
-): Promise<void> {
-  const url = getTwinUrl(
-    env.NEXT_PUBLIC_TWIN_PROFILE_BASE_URL,
-    "NEXT_PUBLIC_TWIN_PROFILE_BASE_URL",
-  );
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(profile),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error("Failed to create twin profile " + errorText);
-  }
-}
-
-export async function simulateTwinProfile(params: {
-  profile: TwinProfileRequest;
-  intervention_focus: string;
-  intervention_delta: number;
-}): Promise<TwinSimulationResponse> {
-  const url = getTwinUrl(
-    env.NEXT_PUBLIC_TWIN_SIMULATE_BASE_URL,
-    "NEXT_PUBLIC_TWIN_SIMULATE_BASE_URL",
-  );
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(params),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error("Failed to simulate twin profile " + errorText);
-  }
-
-  return (await response.json()) as TwinSimulationResponse;
-}
-
-export async function chatWithTwin(params: {
-  message: string;
-  profile: TwinProfileRequest;
-  simulation: TwinSimulationResponse;
-}): Promise<TwinChatResponse> {
-  const url = getTwinUrl(
-    env.NEXT_PUBLIC_TWIN_CHAT_BASE_URL,
-    "NEXT_PUBLIC_TWIN_CHAT_BASE_URL",
-  );
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(params),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error("Failed to chat with twin " + errorText);
-  }
-
-  return (await response.json()) as TwinChatResponse;
+  return await response.json();
 }

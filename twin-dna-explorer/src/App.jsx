@@ -1242,31 +1242,6 @@ const BODY_REGIONS = [
 ];
 
 function AvatarCanvas({ activeRegion, onRegionClick }) {
-  const splineRef = useRef(null);
-
-  useEffect(() => {
-    // When fullscreen is toggled or the window resizes, the avatar container
-    // changes size (it uses 100vh units). The Spline render loop was stopped
-    // for performance after initial load, so we restart it briefly to let
-    // WebGL redraw at the new dimensions, then stop it again.
-    function handleResize() {
-      const app = splineRef.current;
-      if (!app) return;
-      try {
-        app.start();
-        setTimeout(() => { try { app.stop(); } catch (e) { /* ignore */ } }, 400);
-      } catch (e) { /* ignore */ }
-    }
-    window.addEventListener('resize', handleResize, { passive: true });
-    document.addEventListener('fullscreenchange', handleResize);
-    document.addEventListener('webkitfullscreenchange', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      document.removeEventListener('fullscreenchange', handleResize);
-      document.removeEventListener('webkitfullscreenchange', handleResize);
-    };
-  }, []);
-
   return (
     <div className="avatar-scene">
       <div className="avatar-particles">
@@ -1286,7 +1261,6 @@ function AvatarCanvas({ activeRegion, onRegionClick }) {
         <Spline
           scene="https://prod.spline.design/Mols85YGaIZTKdTm/scene.splinecode"
           onLoad={(splineApp) => {
-            splineRef.current = splineApp;
             window.__splineApp = splineApp;
             try {
               // Disable orbit/auto-rotate controls
@@ -1339,23 +1313,15 @@ function StatRing({ label, value, max, color }) {
   const circ = 2 * Math.PI * 28;
   return (
     <div className="stat-ring-wrap">
-      <div style={{ position: 'relative', width: 70, height: 70, flexShrink: 0 }}>
-        <svg width="70" height="70" viewBox="0 0 70 70" style={{ display: 'block' }}>
-          <circle cx="35" cy="35" r="28" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="5"/>
-          <circle cx="35" cy="35" r="28" fill="none" stroke={color} strokeWidth="5"
-            strokeDasharray={circ} strokeDashoffset={circ * (1 - pct / 100)}
-            strokeLinecap="round" transform="rotate(-90 35 35)" style={{ transition: 'stroke-dashoffset 1s ease' }}/>
-        </svg>
-        <span style={{
-          position: 'absolute', inset: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color, fontSize: 12, fontWeight: 700,
-          fontFamily: "'JetBrains Mono', monospace",
-          lineHeight: 1, pointerEvents: 'none',
-        }}>
+      <svg width="70" height="70" viewBox="0 0 70 70">
+        <circle cx="35" cy="35" r="28" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="5"/>
+        <circle cx="35" cy="35" r="28" fill="none" stroke={color} strokeWidth="5"
+          strokeDasharray={circ} strokeDashoffset={circ * (1 - pct / 100)}
+          strokeLinecap="round" transform="rotate(-90 35 35)" style={{ transition: 'stroke-dashoffset 1s ease' }}/>
+        <text x="35" y="39" textAnchor="middle" fill={color} fontSize="12" fontWeight="700" fontFamily="JetBrains Mono, monospace">
           {Math.round(pct)}%
-        </span>
-      </div>
+        </text>
+      </svg>
       <div className="stat-ring-label">{label}</div>
     </div>
   );
